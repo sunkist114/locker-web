@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>사물함 신청</title>
+    <style>
+        body{
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            margin:0; min-height:100vh;
+            display:flex; justify-content:center; align-items:center;
+            background:#f6f7f9;
+        }
+        .container{
+            width:min(1200px,92vw);
+            background:#fff;
+            border:1px solid #e5e7eb;
+            border-radius:16px;
+            padding:24px;
+            box-shadow:0 10px 30px rgba(0,0,0,.08);
+        }
+        h2{margin:0 0 10px;}
+        .sub{color:#4b5563; margin:6px 0 18px;}
+
+        .row{display:flex; gap:24px; align-items:flex-start;}
+        .leftCard,.rightCard{
+            border:1px solid #e5e7eb;
+            border-radius:16px;
+            padding:16px;
+            background:#fafafa;
+        }
+        .leftCard{flex:1; min-width:720px;}
+        .rightCard{width:420px;}
+
+        .grid{
+            display:grid;
+            grid-template-columns:repeat(10, 1fr);
+            gap:8px;
+            width:100%;
+            max-width:720px;
+        }
+        .cell{
+            padding:14px 8px;
+            border:1px solid #d1d5db;
+            border-radius:12px;
+            text-align:center;
+            cursor:pointer;
+            user-select:none;
+            font-weight:800;
+            transition:transform .05s ease, box-shadow .05s ease;
+            background:#fff;
+        }
+        .cell:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.06);}
+        .cell.disabled{cursor:not-allowed; opacity:.7;}
+        .AVAILABLE{background:#aeeaae;}
+        .RESERVED{background:#ffe796;}
+        .APPROVED{background:#ffaaaa;}
+        .selected{outline:3px solid rgba(17,24,39,.35);}
+
+        .label{font-size:14px; color:#111827; font-weight:800; margin:10px 0 6px;}
+        input{
+            width:100%;
+            box-sizing:border-box;
+            padding:10px 12px;
+            border:1px solid #d1d5db;
+            border-radius:10px;
+            font-size:14px;
+            outline:none;
+            background:#fff;
+        }
+        input:focus{border-color:#111827;}
+        button{
+            width:100%;
+            padding:12px 12px;
+            border-radius:10px;
+            border:1px solid #111827;
+            background:#111827;
+            color:#fff;
+            cursor:pointer;
+            font-weight:900;
+            margin-top:12px;
+        }
+        button:hover{filter:brightness(1.05);}
+        button.secondary{
+            background:#fff;
+            color:#111827;
+        }
+        .msg{
+            margin-top:10px;
+            color:#374151;
+            font-size:14px;
+            line-height:1.4;
+            white-space:pre-wrap;
+            min-height:22px;
+        }
+
+        @media (max-width:1100px){
+            body{align-items:flex-start; padding:20px 0;}
+            .row{flex-direction:column;}
+            .leftCard{min-width:auto;}
+            .rightCard{width:auto;}
+            .grid{max-width:none;}
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h2>사물함 신청</h2>
+    <div class="sub">초록=가능 / 노랑=대기예약 / 빨강=승인사용중</div>
+
+    <div class="row">
+        <div class="leftCard">
+            <div id="grid" class="grid"></div>
+        </div>
+
+        <div class="rightCard">
+            <h3 style="margin:0 0 8px;">신청 정보</h3>
+            <div class="sub" style="margin:0 0 12px;">선택 사물함: <b id="sel">없음</b></div>
+
+            <div class="label">학번</div>
+            <input id="studentId" placeholder="예) 20244000"/>
+
+            <div class="label">이름</div>
+            <input id="name" placeholder="예) 강민선"/>
+
+            <div class="label">전화번호</div>
+            <input id="phone" placeholder="예) 01012345678"/>
+
+            <button id="applyBtn">신청하기</button>
+
+            <!-- ✅ 내 신청 확인 버튼/결과 -->
+            <button id="checkBtn" class="secondary" type="button">내 신청 확인</button>
+            <div id="myStatusBox" class="msg"></div>
+
+            <div id="msg" class="msg"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedLocker = null;
+
+    function setMsg(t){ document.getElementById('msg').textContent = t; }
+
+    function setMyStatus(t){ document.getElementById('myStatusBox').textContent = t; }
+
+    function sanitizePhone(p){
+        return (p || '').replace(/[^0-9]/g, '');
+    }
+
+    async function loadGrid(){
+        const r = await fetch('/api/public/grid');
+        const data = await r.json();
+
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+
+        data.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'cell ' + item.state;
+            div.textContent = item.lockerNumber;
+            div.title = item.state + (item.studentId ? (' / ' + item.studentId) : '');
+
+            const disabled = (item.state !== 'AVAILABLE');
+            if (disabled) div.classList.add('disabled');
+
+            div.onclick = () => {
+                if (disabled) return;
+                selectedLocker = item.lockerNumber;
+
+                // selection highlight
+                document.querySelectorAll('.cell').forEach(x => x.classList.remove('selected'));
+                div.classList.add('selected');
+
+                document.getElementById('sel').textContent = selectedLocker + '번';
+                setMsg('');
+            };
+
+            grid.appendChild(div);
+        });
+    }
+
+    async function apply(){
+        const studentId = document.getElementById('studentId').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const phone = sanitizePhone(document.getElementById('phone').value.trim());
+
+        if (!selectedLocker) return setMsg('사물함을 먼저 선택하세요.');
+        if (!studentId) return setMsg('학번을 입력하세요.');
+        if (!name) return setMsg('이름을 입력하세요.');
+        if (!phone) return setMsg('전화번호를 입력하세요.');
+
+        setMsg('신청 중...');
+
+        const payload = {
+            studentId,
+            name,
+            phone,
+            lockerNumber: selectedLocker
+        };
+
+        const r = await fetch('/api/public/apply', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify(payload)
+        });
+
+        if (!r.ok){
+            const t = await r.text();
+            setMsg('신청 실패: ' + t);
+            return;
+        }
+
+        setMsg('신청 완료! 관리자 승인을 기다려주세요.');
+        await loadGrid();
+    }
+
+    // ✅ 내 신청 조회
+    async function loadMyStatus(){
+        const studentId = document.getElementById('studentId').value.trim();
+        if (!studentId) {
+            alert('학번을 입력하세요.');
+            return;
+        }
+
+        setMyStatus('조회 중...');
+
+        const r = await fetch('/api/public/my-status?studentId=' + encodeURIComponent(studentId));
+
+        let data;
+        try {
+            data = await r.json();
+        } catch (e) {
+            const t = await r.text();
+            setMyStatus('조회 실패: 서버 응답이 올바르지 않습니다.\n' + t);
+            return;
+        }
+
+        if (!r.ok) {
+            setMyStatus('조회 실패: ' + (data?.message || JSON.stringify(data)));
+            return;
+        }
+
+        if (data.status === 'NONE') {
+            setMyStatus(data.message);
+        } else {
+            setMyStatus(`${data.message} (사물함: ${data.lockerNumber}번 / 상태: ${data.status})`);
+        }
+    }
+
+    document.getElementById('applyBtn').addEventListener('click', apply);
+    document.getElementById('checkBtn').addEventListener('click', loadMyStatus);
+
+    (async function init(){
+        await loadGrid();
+    })();
+</script>
+
+</body>
+</html>

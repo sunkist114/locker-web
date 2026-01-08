@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lockerdb
+    username: locker
+    password: lockerpass
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+server:
+  port: 8080

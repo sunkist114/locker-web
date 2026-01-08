@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>관리자</title>
+  <style>
+    body{
+      font-family:sans-serif;margin:0;min-height:100vh;display:flex;
+      justify-content:center;align-items:center;background:#f6f7f9;
+    }
+    .container{
+      width:min(1300px,92vw);background:#fff;border:1px solid #e5e7eb;
+      border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.08);
+    }
+    h2{margin:0 0 14px;}
+    .sub{color:#4b5563;margin:8px 0 12px;}
+
+    .row{display:flex;gap:24px;align-items:flex-start;}
+    .leftCard,.rightCard{
+      border:1px solid #e5e7eb;border-radius:16px;padding:16px;background:#fafafa;
+    }
+    .leftCard{flex:1;min-width:720px;}
+    .rightCard{width:520px;}
+
+    .grid{
+      display:grid;grid-template-columns:repeat(10,1fr);gap:8px;width:100%;
+      max-width:720px;
+    }
+    .cell{
+      padding:14px 8px;border:1px solid #d1d5db;border-radius:12px;text-align:center;
+      cursor:pointer;user-select:none;font-weight:800;
+      transition:transform .05s ease, box-shadow .05s ease;
+    }
+    .cell:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.06);}
+    .AVAILABLE{background:#aeeaae;}
+    .RESERVED{background:#ffe796;}
+    .APPROVED{background:#ffaaaa;}
+
+    .controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    button{
+      padding:10px 12px;border-radius:10px;border:1px solid #111827;background:#111827;
+      color:#fff;cursor:pointer;font-weight:800;
+    }
+    button.secondary{background:#fff;color:#111827;}
+    button:hover{filter:brightness(1.05);}
+
+    table{border-collapse:collapse;width:100%;background:#fff;border-radius:12px;overflow:hidden;}
+    th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;}
+    th{background:#f3f4f6;}
+    #msg{margin-top:10px;color:#374151;min-height:20px;}
+
+    @media (max-width:1100px){
+      body{align-items:flex-start;padding:20px 0;}
+      .row{flex-direction:column;}
+      .leftCard{min-width:auto;}
+      .rightCard{width:auto;}
+      .grid{max-width:none;}
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>관리자 대시보드</h2>
+  <div class="sub">사물함 클릭 후: 승인(빨강)인 칸은 “비우기” 가능 / 대기는 승인·거절로 처리</div>
+
+  <div class="row">
+    <div class="leftCard">
+      <div id="grid" class="grid"></div>
+
+      <div class="controls">
+        <div>선택 사물함: <b id="sel">없음</b></div>
+        <button id="clearBtn" class="secondary">비우기(승인만)</button>
+        <button id="resetBtn">전체 초기화</button>
+      </div>
+
+      <div id="msg"></div>
+    </div>
+
+    <div class="rightCard">
+      <h3 style="margin-top:0;">승인 대기 목록</h3>
+      <table>
+        <thead>
+        <tr>
+          <th>학번</th>
+          <th>이름</th>
+          <th>사물함</th>
+          <th>관리</th>
+        </tr>
+        </thead>
+        <tbody id="pending"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  let selectedLocker = null;
+
+  function setMsg(t){ document.getElementById('msg').textContent = t; }
+
+  // ✅ API 호출 헬퍼: 로그인 안 되어 401이면 확실히 실패 처리
+  async function apiFetch(url, opts){
+    const r = await fetch(url, opts);
+
+    if (r.status === 401) {
+      throw new Error('로그인이 필요합니다. /admin.html 다시 접속해서 로그인 후 사용하세요.');
+    }
+
+    // 혹시라도 /login 페이지로 리다이렉트된 HTML을 200으로 받는 상황 방지
+    const ct = (r.headers.get('content-type') || '').toLowerCase();
+    if (r.redirected || ct.includes('text/html')) {
+      throw new Error('로그인이 필요합니다. 로그인 후 새로고침하세요.');
+    }
+
+    return r;
+  }
+
+  async function loadGrid(){
+    const res = await apiFetch('/api/public/grid');
+    const data = await res.json();
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+
+    data.forEach(item => {
+      const div = document.createElement('div');
+      div.className = 'cell ' + item.state;
+      div.textContent = item.lockerNumber;
+      div.title = item.state + (item.studentId ? (' / ' + item.studentId) : '');
+
+      div.onclick = () => {
+        selectedLocker = item.lockerNumber;
+        document.getElementById('sel').textContent = selectedLocker + '번 (' + item.state + ')';
+      };
+
+      grid.appendChild(div);
+    });
+  }
+
+  async function loadPending(){
+    const res = await apiFetch('/api/admin/pending');
+    const data = await res.json();
+    const tb = document.getElementById('pending');
+    tb.innerHTML = '';
+
+    data.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+      <td>${p.studentId}</td>
+      <td>${p.name}</td>
+      <td>${p.lockerNumber}</td>
+      <td>
+        <button class="secondary" data-a="${p.id}">승인</button>
+        <button data-r="${p.id}">거절</button>
+      </td>
+    `;
+      tb.appendChild(tr);
+    });
+
+    tb.querySelectorAll('button[data-a]').forEach(btn => {
+      btn.onclick = async () => {
+        try {
+          const id = btn.getAttribute('data-a');
+          const r = await apiFetch('/api/admin/approve/' + id, { method:'POST' });
+          if (!r.ok) setMsg('승인 실패: ' + await r.text());
+          else {
+            setMsg('승인 완료');
+            await loadGrid();
+            await loadPending();
+          }
+        } catch(e){ setMsg(e.message); }
+      };
+    });
+
+    tb.querySelectorAll('button[data-r]').forEach(btn => {
+      btn.onclick = async () => {
+        try {
+          const id = btn.getAttribute('data-r');
+          if (!confirm('거절 시 신청 기록이 DB에서 삭제됩니다. 계속하시겠습니까?')) return;
+
+          const r = await apiFetch('/api/admin/reject/' + id, { method:'POST' });
+          if (!r.ok) setMsg('거절 실패: ' + await r.text());
+          else {
+            setMsg('거절 완료');
+            await loadGrid();
+            await loadPending();
+          }
+        } catch(e){ setMsg(e.message); }
+      };
+    });
+  }
+
+  document.getElementById('clearBtn').onclick = async () => {
+    try {
+      if (!selectedLocker) return setMsg('사물함을 먼저 클릭하세요.');
+
+      const r = await apiFetch('/api/admin/clear/' + selectedLocker, { method:'POST' });
+      if (!r.ok){
+        setMsg('비우기 실패: ' + await r.text());
+      } else {
+        setMsg('비우기 완료(재신청 가능)');
+        await loadGrid();
+        await loadPending();
+      }
+    } catch(e){ setMsg(e.message); }
+  };
+
+  document.getElementById('resetBtn').onclick = async () => {
+    try {
+      if (!confirm('전체 초기화: 신청/승인 현황이 DB에서 삭제됩니다. 계속하시겠습니까?')) return;
+
+      const r = await apiFetch('/api/admin/reset', { method:'POST' });
+      if (!r.ok){
+        setMsg('초기화 실패: ' + await r.text());
+      } else {
+        setMsg('전체 초기화 완료');
+        selectedLocker = null;
+        document.getElementById('sel').textContent = '없음';
+        await loadGrid();
+        await loadPending();
+      }
+    } catch(e){ setMsg(e.message); }
+  };
+
+  // ✅ SSE (로그인 되었을 때만 동작)
+  try {
+    const es = new EventSource('/sse/admin');
+    es.addEventListener('changed', async () => {
+      try {
+        await loadGrid();
+        await loadPending();
+      } catch(e) { /* 무시 */ }
+    });
+  } catch(e) {
+    // SSE 미지원/차단이면 무시
+  }
+
+  (async function init(){
+    try {
+      await loadGrid();
+      await loadPending();
+    } catch(e){
+      setMsg(e.message);
+    }
+  })();
+</script>
+</body>
+</html>
