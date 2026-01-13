@@ -16,5 +16,3 @@ Thumbs.db
 
 # Secrets / config (DO NOT COMMIT)
 .env
-src/main/resources/application.yml
-src/main/resources/application.properties
