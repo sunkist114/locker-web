@@ -5,118 +5,216 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>사물함 신청</title>
     <style>
-        body{
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-            margin:0; min-height:100vh;
-            display:flex; justify-content:center; align-items:center;
-            background:#f6f7f9;
-        }
-        .container{
-            width:min(1200px,92vw);
-            background:#fff;
-            border:1px solid #e5e7eb;
-            border-radius:16px;
-            padding:24px;
-            box-shadow:0 10px 30px rgba(0,0,0,.08);
-        }
-        h2{margin:0 0 10px;}
-        .sub{color:#4b5563; margin:6px 0 18px;}
+        :root{
+            --bg:#f5f6f8;
+            --card:#ffffff;
+            --text:#111827;
+            --muted:#6b7280;
+            --border:#e5e7eb;
 
-        .row{display:flex; gap:24px; align-items:flex-start;}
-        .leftCard,.rightCard{
-            border:1px solid #e5e7eb;
-            border-radius:16px;
-            padding:16px;
-            background:#fafafa;
+            /* 관리자 페이지와 색감 통일 */
+            --good: rgba(34,197,94,0.25);   /* AVAILABLE */
+            --warn: rgba(251,191,36,0.35);  /* PENDING/RESERVED */
+            --bad:  rgba(239,68,68,0.25);   /* APPROVED */
+
+            --radius:14px;
+            --btn:#0f172a;
+            --btnText:#fff;
         }
-        .leftCard{flex:1; min-width:720px;}
-        .rightCard{width:420px;}
+
+        *{ box-sizing:border-box; }
+        body{
+            margin:0;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .wrap{
+            max-width:1100px;
+            margin: 28px auto;
+            padding: 0 16px;
+        }
+
+        .title{
+            font-size:20px;
+            font-weight:900;
+            margin: 0 0 6px;
+        }
+        .sub{
+            color:var(--muted);
+            font-size:12px;
+            margin: 0 0 14px;
+            line-height:1.4;
+        }
 
         .grid{
             display:grid;
-            grid-template-columns:repeat(10, 1fr);
-            gap:8px;
-            width:100%;
-            max-width:720px;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap:14px;
         }
-        .cell{
-            padding:14px 8px;
-            border:1px solid #d1d5db;
-            border-radius:12px;
-            text-align:center;
-            cursor:pointer;
-            user-select:none;
-            font-weight:800;
-            transition:transform .05s ease, box-shadow .05s ease;
-            background:#fff;
+        @media (max-width: 960px){
+            .grid{ grid-template-columns: 1fr; }
         }
-        .cell:hover{transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,0,0,.06);}
-        .cell.disabled{cursor:not-allowed; opacity:.7;}
-        .AVAILABLE{background:#aeeaae;}
-        .RESERVED{background:#ffe796;}
-        .APPROVED{background:#ffaaaa;}
-        .selected{outline:3px solid rgba(17,24,39,.35);}
 
-        .label{font-size:14px; color:#111827; font-weight:800; margin:10px 0 6px;}
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius: var(--radius);
+            padding:16px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+        }
+
+        .card h2{
+            margin:0 0 8px;
+            font-size:16px;
+            font-weight:900;
+        }
+
+        /* legend (관리자 페이지 스타일) */
+        .legend{
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:10px;
+            align-items:center;
+        }
+        .chip{
+            display:flex;
+            align-items:center;
+            gap:6px;
+            font-size:12px;
+            color:var(--muted);
+            font-weight:800;
+        }
+        .dot{
+            width:10px;
+            height:10px;
+            border-radius:50%;
+        }
+        .dot.good{ background: rgba(34,197,94,0.6); }
+        .dot.warn{ background: rgba(251,191,36,0.8); }
+        .dot.bad { background: rgba(239,68,68,0.75); }
+
+        /* 사물함 그리드: 가로 스크롤 안 생기게 */
+        .locker-grid{
+            display:grid;
+            grid-template-columns: repeat(10, minmax(0, 1fr));
+            gap:8px;
+            padding:10px;
+            border:1px solid var(--border);
+            border-radius:12px;
+            background:#fafafa;
+        }
+        /* 화면이 좁아질수록 버튼이 자동으로 더 작아지게 */
+        @media (max-width: 420px){
+            .locker-grid{ gap:6px; padding:8px; }
+        }
+
+        .locker{
+            border-radius:10px;
+            padding:10px 0;
+            text-align:center;
+            font-weight:900;
+            font-size:13px;
+            border: 1px solid transparent;
+            user-select:none;
+            cursor:pointer;
+        }
+        @media (max-width: 420px){
+            .locker{ padding:9px 0; font-size:12px; border-radius:9px; }
+        }
+
+        .locker.available{ background: var(--good); border-color: var(--good); }
+        .locker.pending { background: var(--warn); border-color: var(--warn); }
+        .locker.approved{ background: var(--bad);  border-color: var(--bad); }
+
+        .locker.disabled{
+            cursor:not-allowed;
+            opacity:0.9;
+        }
+        .locker.selected{
+            outline:3px solid rgba(17,24,39,.25);
+        }
+
+        .label{
+            font-size:12px;
+            font-weight:900;
+            color:var(--text);
+            margin: 10px 0 6px;
+        }
+
         input{
             width:100%;
-            box-sizing:border-box;
-            padding:10px 12px;
-            border:1px solid #d1d5db;
+            padding:12px 12px;
+            border:1px solid var(--border);
             border-radius:10px;
             font-size:14px;
             outline:none;
             background:#fff;
         }
-        input:focus{border-color:#111827;}
-        button{
+        input:focus{ border-color:#111827; }
+
+        .btn{
             width:100%;
             padding:12px 12px;
             border-radius:10px;
-            border:1px solid #111827;
-            background:#111827;
-            color:#fff;
+            border:1px solid var(--btn);
+            background: var(--btn);
+            color: var(--btnText);
             cursor:pointer;
             font-weight:900;
+            font-size:14px;
             margin-top:12px;
         }
-        button:hover{filter:brightness(1.05);}
-        button.secondary{
+        .btn.secondary{
             background:#fff;
-            color:#111827;
+            color:var(--text);
+            border-color: var(--border);
         }
+        .btn:hover{ filter:brightness(1.05); }
+
         .msg{
             margin-top:10px;
-            color:#374151;
-            font-size:14px;
-            line-height:1.4;
+            font-size:13px;
+            color:var(--muted);
             white-space:pre-wrap;
             min-height:22px;
+            line-height:1.5;
         }
 
-        @media (max-width:1100px){
-            body{align-items:flex-start; padding:20px 0;}
-            .row{flex-direction:column;}
-            .leftCard{min-width:auto;}
-            .rightCard{width:auto;}
-            .grid{max-width:none;}
+        .small-sub{
+            font-size:12px;
+            color:var(--muted);
+            margin-top:6px;
         }
     </style>
 </head>
 
 <body>
-<div class="container">
-    <h2>사물함 신청</h2>
-    <div class="sub">초록=가능 / 노랑=대기예약 / 빨강=승인사용중</div>
+<div class="wrap">
+    <div class="title">사물함 신청</div>
+    <div class="sub">사물함을 선택 후, 학생 본인의 정보를 입력하여주세요.</div>
 
-    <div class="row">
-        <div class="leftCard">
-            <div id="grid" class="grid"></div>
+    <div class="grid">
+        <!-- Left: Locker grid -->
+        <div class="card">
+            <h2>현재 사물함 현황</h2>
+
+            <div class="legend">
+                <div class="chip"><span class="dot good"></span>AVAILABLE</div>
+                <div class="chip"><span class="dot warn"></span>PENDING</div>
+                <div class="chip"><span class="dot bad"></span>APPROVED</div>
+            </div>
+
+            <div id="grid" class="locker-grid"></div>
+            <div id="gridSummary" class="msg"></div>
         </div>
 
-        <div class="rightCard">
-            <h3 style="margin:0 0 8px;">신청 정보</h3>
-            <div class="sub" style="margin:0 0 12px;">선택 사물함: <b id="sel">없음</b></div>
+        <!-- Right: Apply form -->
+        <div class="card">
+            <h2>신청 정보</h2>
+            <div class="small-sub">선택 사물함: <b id="sel">없음</b></div>
 
             <div class="label">학번</div>
             <input id="studentId" placeholder="예) 20244000"/>
@@ -127,10 +225,9 @@
             <div class="label">전화번호</div>
             <input id="phone" placeholder="예) 01012345678"/>
 
-            <button id="applyBtn">신청하기</button>
+            <button id="applyBtn" class="btn">신청하기</button>
 
-            <!-- ✅ 내 신청 확인 버튼/결과 -->
-            <button id="checkBtn" class="secondary" type="button">내 신청 확인</button>
+            <button id="checkBtn" class="btn secondary" type="button">나의 사물함 조회</button>
             <div id="myStatusBox" class="msg"></div>
 
             <div id="msg" class="msg"></div>
@@ -141,44 +238,83 @@
 <script>
     let selectedLocker = null;
 
-    function setMsg(t){ document.getElementById('msg').textContent = t; }
-
-    function setMyStatus(t){ document.getElementById('myStatusBox').textContent = t; }
+    function setMsg(t){ document.getElementById('msg').textContent = t || ''; }
+    function setMyStatus(t){ document.getElementById('myStatusBox').textContent = t || ''; }
 
     function sanitizePhone(p){
         return (p || '').replace(/[^0-9]/g, '');
+    }
+
+    // ✅ "열 기준(1,6,11...)" 표시 순서 만들기 (5행 x 10열)
+    function buildDisplayOrder(rows=5, cols=10){
+        const order = [];
+        for (let r = 1; r <= rows; r++){
+            for (let c = 1; c <= cols; c++){
+                order.push(r + rows * (c - 1));
+            }
+        }
+        return order; // [1,6,11,...,46, 2,7,12,...]
+    }
+
+    function stateToClass(state){
+        const s = (state || 'AVAILABLE').toUpperCase();
+        if (s === 'APPROVED') return 'approved';
+        if (s === 'PENDING' || s === 'RESERVED') return 'pending';
+        return 'available';
     }
 
     async function loadGrid(){
         const r = await fetch('/api/public/grid');
         const data = await r.json();
 
+        // lockerNumber -> item 매핑
+        const map = new Map();
+        data.forEach(x => map.set(Number(x.lockerNumber), x));
+
         const grid = document.getElementById('grid');
         grid.innerHTML = '';
 
-        data.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'cell ' + item.state;
-            div.textContent = item.lockerNumber;
-            div.title = item.state + (item.studentId ? (' / ' + item.studentId) : '');
+        let available=0, pending=0, approved=0;
 
-            const disabled = (item.state !== 'AVAILABLE');
+        // ✅ 원하는 표시 순서대로 렌더링
+        const order = buildDisplayOrder(5, 10);
+        order.forEach(num => {
+            const item = map.get(num) || { lockerNumber:num, state:'AVAILABLE', studentId:null };
+
+            const state = (item.state || 'AVAILABLE').toUpperCase();
+            const cls = stateToClass(state);
+
+            const div = document.createElement('div');
+            div.className = 'locker ' + cls;
+            div.textContent = num;
+
+            // 카운트
+            if (cls === 'available') available++;
+            else if (cls === 'pending') pending++;
+            else approved++;
+
+            const disabled = (state !== 'AVAILABLE');
             if (disabled) div.classList.add('disabled');
+
+            div.title = state + (item.studentId ? (' / ' + item.studentId) : '');
 
             div.onclick = () => {
                 if (disabled) return;
-                selectedLocker = item.lockerNumber;
 
-                // selection highlight
-                document.querySelectorAll('.cell').forEach(x => x.classList.remove('selected'));
+                selectedLocker = num;
+
+                document.querySelectorAll('.locker').forEach(x => x.classList.remove('selected'));
                 div.classList.add('selected');
 
-                document.getElementById('sel').textContent = selectedLocker + '번';
+                document.getElementById('sel').textContent = num + '번';
                 setMsg('');
             };
 
             grid.appendChild(div);
         });
+
+        document.getElementById('gridSummary').textContent =
+            `AVAILABLE: ${available} / PENDING: ${pending} / APPROVED: ${approved}`;
     }
 
     async function apply(){
@@ -193,12 +329,7 @@
 
         setMsg('신청 중...');
 
-        const payload = {
-            studentId,
-            name,
-            phone,
-            lockerNumber: selectedLocker
-        };
+        const payload = { studentId, name, phone, lockerNumber: selectedLocker };
 
         const r = await fetch('/api/public/apply', {
             method:'POST',
@@ -216,7 +347,6 @@
         await loadGrid();
     }
 
-    // ✅ 내 신청 조회
     async function loadMyStatus(){
         const studentId = document.getElementById('studentId').value.trim();
         if (!studentId) {
@@ -256,6 +386,5 @@
         await loadGrid();
     })();
 </script>
-
 </body>
 </html>

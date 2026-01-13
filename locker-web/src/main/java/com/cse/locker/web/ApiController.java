@@ -35,11 +35,6 @@ public class ApiController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/api/public/my-status")
-    public LockerService.MyStatusDto myStatus(@RequestParam String studentId) {
-        return service.getMyStatus(studentId.trim());
-    }
-
     // ===== Admin =====
 
     @GetMapping("/api/admin/pending")
@@ -73,5 +68,10 @@ public class ApiController {
         service.resetAll();
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/api/public/my-status")
+    public LockerService.MyStatusDto myStatus(@RequestParam String studentId) {
+        return service.getMyStatus(studentId.trim());
     }
 }

@@ -22,7 +22,7 @@ public class LockerService {
         this.appRepo = appRepo;
     }
 
-    public record LockerDto(int lockerNumber, String state, String studentId) {}
+    public record LockerDto(int lockerNumber, String status, String studentId) {}
     public record PendingDto(long id, String studentId, String name, String phone, int lockerNumber) {}
 
     @PostConstruct
@@ -46,12 +46,9 @@ public class LockerService {
             Locker l = lockerRepo.findById(n)
                     .orElseThrow(() -> new IllegalArgumentException("없는 사물함: " + n));
 
-            String status = l.getState().name();
-            if ("RESERVED".equals(status)) status = "PENDING";
-
             out.add(new LockerDto(
                     l.getLockerNumber(),
-                    status,
+                    l.getState().name(),
                     l.getReservedStudentId()
             ));
         }

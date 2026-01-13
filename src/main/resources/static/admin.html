@@ -1,248 +1,427 @@
 <!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>관리자</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>관리자 페이지</title>
   <style>
-    body{
-      font-family:sans-serif;margin:0;min-height:100vh;display:flex;
-      justify-content:center;align-items:center;background:#f6f7f9;
+    :root {
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #111827;
+      --btn: #0f172a;
+      --btnText: #fff;
+      --good: #22c55e;
+      --warn: #fbbf24;
+      --bad: #ef4444;
+      --radius: 14px;
     }
-    .container{
-      width:min(1300px,92vw);background:#fff;border:1px solid #e5e7eb;
-      border-radius:16px;padding:24px;box-shadow:0 10px 30px rgba(0,0,0,.08);
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
     }
-    h2{margin:0 0 14px;}
-    .sub{color:#4b5563;margin:8px 0 12px;}
+    .wrap {
+      max-width: 1100px;
+      margin: 28px auto;
+      padding: 0 16px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .title {
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .top-actions { display: flex; gap: 8px; }
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .btn.primary {
+      background: var(--btn);
+      color: var(--btnText);
+      border-color: var(--btn);
+    }
+    .btn.danger {
+      background: var(--bad);
+      color: white;
+      border-color: var(--bad);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 14px;
+    }
+    @media (max-width: 960px) {
+      .grid { grid-template-columns: 1fr; }
+      .top-actions { flex-wrap: wrap; justify-content: flex-end; }
+    }
 
-    .row{display:flex;gap:24px;align-items:flex-start;}
-    .leftCard,.rightCard{
-      border:1px solid #e5e7eb;border-radius:16px;padding:16px;background:#fafafa;
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.04);
     }
-    .leftCard{flex:1;min-width:720px;}
-    .rightCard{width:520px;}
-
-    .grid{
-      display:grid;grid-template-columns:repeat(10,1fr);gap:8px;width:100%;
-      max-width:720px;
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 16px;
     }
-    .cell{
-      padding:14px 8px;border:1px solid #d1d5db;border-radius:12px;text-align:center;
-      cursor:pointer;user-select:none;font-weight:800;
-      transition:transform .05s ease, box-shadow .05s ease;
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 12px;
+      line-height: 1.4;
     }
-    .cell:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,.06);}
-    .AVAILABLE{background:#aeeaae;}
-    .RESERVED{background:#ffe796;}
-    .APPROVED{background:#ffaaaa;}
-
-    .controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
-    button{
-      padding:10px 12px;border-radius:10px;border:1px solid #111827;background:#111827;
-      color:#fff;cursor:pointer;font-weight:800;
+    /* Pending header row: title + buttons in one line */
+    .card-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 8px;
     }
-    button.secondary{background:#fff;color:#111827;}
-    button:hover{filter:brightness(1.05);}
+    .card-head h2{
+      margin:0;              /* 기존 h2 margin 제거 */
+      font-size:16px;
+    }
+    .head-actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:nowrap;      /* 한 줄 유지 */
+    }
 
-    table{border-collapse:collapse;width:100%;background:#fff;border-radius:12px;overflow:hidden;}
-    th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;}
-    th{background:#f3f4f6;}
-    #msg{margin-top:10px;color:#374151;min-height:20px;}
+    /* 화면이 정말 좁을 때만 줄바꿈 허용 (선택) */
+    @media (max-width: 420px){
+      .head-actions{ flex-wrap:wrap; }
+    }
 
-    @media (max-width:1100px){
-      body{align-items:flex-start;padding:20px 0;}
-      .row{flex-direction:column;}
-      .leftCard{min-width:auto;}
-      .rightCard{width:auto;}
-      .grid{max-width:none;}
+    /* Locker grid */
+    .legend { display:flex; gap:10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .chip { display:flex; align-items:center; gap:6px; font-size:12px; color: var(--muted); }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot.good { background: rgba(34,197,94,0.6); }
+    .dot.warn { background: rgba(251,191,36,0.8); }
+    .dot.bad { background: rgba(239,68,68,0.75); }
+
+    .locker-grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fafafa;
+      overflow-x: auto;
+    }
+    .locker {
+      border-radius: 10px;
+      padding: 10px 0;
+      text-align: center;
+      font-weight: 800;
+      font-size: 13px;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+    .locker.available { background: rgba(34,197,94,0.25); border-color: rgba(34,197,94,0.25); }
+    .locker.pending { background: rgba(251,191,36,0.35); border-color: rgba(251,191,36,0.35); }
+    .locker.approved { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.25); }
+
+    /* Pending list */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+    }
+    .table th, .table td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      font-size: 13px;
+      text-align: left;
+      vertical-align: middle;
+    }
+    .table th { color: var(--muted); font-weight: 800; font-size: 12px; }
+    .actions { display:flex; gap:6px; flex-wrap: wrap; }
+    .small {
+      padding: 7px 10px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .small.approve { background: var(--good); color: #fff; border: 1px solid var(--good); }
+    .small.reject { background: #fff; color: var(--bad); border: 1px solid var(--bad); }
+    .small.clear { background: #fff; color: #111827; border: 1px solid var(--border); }
+
+    .toast {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      white-space: pre-line;
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <h2>관리자 대시보드</h2>
-  <div class="sub">사물함 클릭 후: 승인(빨강)인 칸은 “비우기” 가능 / 대기는 승인·거절로 처리</div>
+<div class="wrap">
+  <div class="topbar">
+    <div class="title">관리자 페이지</div>
+    <div class="top-actions">
+      <button class="btn" onclick="goApproved()">사물함 이용 현황</button>
+      <button class="btn danger" onclick="doLogout()">로그아웃</button>
+    </div>
+  </div>
 
-  <div class="row">
-    <div class="leftCard">
-      <div id="grid" class="grid"></div>
-
-      <div class="controls">
-        <div>선택 사물함: <b id="sel">없음</b></div>
-        <button id="clearBtn" class="secondary">비우기(승인만)</button>
-        <button id="resetBtn">전체 초기화</button>
+  <div class="grid">
+    <!-- Locker status -->
+    <div class="card">
+      <h2>현재 사물함 현황</h2>
+      <div class="legend">
+        <div class="chip"><span class="dot good"></span>AVAILABLE</div>
+        <div class="chip"><span class="dot warn"></span>PENDING</div>
+        <div class="chip"><span class="dot bad"></span>APPROVED</div>
       </div>
+      <div id="lockerGrid" class="locker-grid"></div>
 
-      <div id="msg"></div>
+      <div class="toast" id="lockerSummary"></div>
     </div>
 
-    <div class="rightCard">
-      <h3 style="margin-top:0;">승인 대기 목록</h3>
-      <table>
-        <thead>
+    <!-- Pending approvals -->
+    <!-- Pending approvals -->
+    <div class="card">
+      <div class="card-head">
+        <h2>신청 대기 목록</h2>
+        <div class="head-actions">
+          <button class="btn primary" onclick="refreshAll()">새로고침</button>
+          <button class="btn" onclick="resetAll()">전체 초기화</button>
+        </div>
+      </div>
+
+      <table class="table">
+
+      <thead>
         <tr>
+          <th>사물함</th>
           <th>학번</th>
           <th>이름</th>
-          <th>사물함</th>
-          <th>관리</th>
+          <th>전화번호</th>
+          <th>처리</th>
         </tr>
         </thead>
-        <tbody id="pending"></tbody>
+        <tbody id="pendingBody">
+        <tr><td colspan="5" style="color:var(--muted); padding:14px 8px;">불러오는 중...</td></tr>
+        </tbody>
       </table>
+
+      <div class="toast" id="msg"></div>
     </div>
   </div>
 </div>
 
 <script>
-  let selectedLocker = null;
-
-  function setMsg(t){ document.getElementById('msg').textContent = t; }
-
-  // ✅ API 호출 헬퍼: 로그인 안 되어 401이면 확실히 실패 처리
-  async function apiFetch(url, opts){
-    const r = await fetch(url, opts);
-
-    if (r.status === 401) {
-      throw new Error('로그인이 필요합니다. /admin.html 다시 접속해서 로그인 후 사용하세요.');
-    }
-
-    // 혹시라도 /login 페이지로 리다이렉트된 HTML을 200으로 받는 상황 방지
-    const ct = (r.headers.get('content-type') || '').toLowerCase();
-    if (r.redirected || ct.includes('text/html')) {
-      throw new Error('로그인이 필요합니다. 로그인 후 새로고침하세요.');
-    }
-
-    return r;
+  // ===== Navigation =====
+  function goApproved() { location.href = "/admin-approved.html"; }
+  function doLogout() {
+    fetch("/logout", { method: "POST" })
+            .finally(() => location.href = "/login.html");
   }
 
-  async function loadGrid(){
-    const res = await apiFetch('/api/public/grid');
-    const data = await res.json();
-    const grid = document.getElementById('grid');
-    grid.innerHTML = '';
+  // ===== Helpers =====
+  async function api(url, options) {
+    const res = await fetch(url, options);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(text || ("HTTP " + res.status));
+    }
+    const ct = res.headers.get("content-type") || "";
+    if (ct.includes("application/json")) return res.json();
+    return res.text();
+  }
 
-    data.forEach(item => {
-      const div = document.createElement('div');
-      div.className = 'cell ' + item.state;
-      div.textContent = item.lockerNumber;
-      div.title = item.state + (item.studentId ? (' / ' + item.studentId) : '');
+  function setMsg(text) {
+    document.getElementById("msg").textContent = text || "";
+  }
 
-      div.onclick = () => {
-        selectedLocker = item.lockerNumber;
-        document.getElementById('sel').textContent = selectedLocker + '번 (' + item.state + ')';
-      };
+  // ✅ "열 기준(1,6,11...)" 표시 순서 만들기 (5행 x 10열)
+  function buildDisplayOrder(rows=5, cols=10){
+    const order = [];
+    for (let r = 1; r <= rows; r++){
+      for (let c = 1; c <= cols; c++){
+        order.push(r + rows * (c - 1));
+      }
+    }
+    return order;
+  }
+
+  // ===== Locker Grid =====
+  function renderGrid(items) {
+    const grid = document.getElementById("lockerGrid");
+    grid.innerHTML = "";
+
+    // lockerNumber -> item map
+    const map = new Map();
+    (items || []).forEach(x => map.set(Number(x.lockerNumber), x));
+
+    let available = 0, pending = 0, approved = 0;
+
+    const order = buildDisplayOrder(5, 10);
+    order.forEach(num => {
+      const it = map.get(num) || { lockerNumber:num, state:"AVAILABLE", studentId:null };
+
+      const div = document.createElement("div");
+      const s = (it.state || it.status || "AVAILABLE").toUpperCase();
+      const cls =
+              (s === "APPROVED") ? "approved" :
+                      (s === "PENDING" || s === "RESERVED") ? "pending" :
+                              "available";
+
+      div.className = "locker " + cls;
+      div.textContent = num;
+
+      if (cls === "available") available++;
+      else if (cls === "pending") pending++;
+      else approved++;
+
+      // 승인된 사물함 클릭 -> 비우기
+      if (s === "APPROVED") {
+        div.style.cursor = "pointer";
+        div.title = "클릭하면 사물함을 비웁니다.";
+
+        div.addEventListener("click", async () => {
+          if (!confirm(`${num}번 사물함을 비우시겠습니까?`)) return;
+
+          try {
+            const r = await fetch(`/api/admin/clear/${num}`, { method: "POST" });
+            if (!r.ok) {
+              const t = await r.text();
+              alert("비우기 실패: " + t);
+              return;
+            }
+
+            setMsg(`${num}번 비우기 완료`);
+            await refreshAll();
+          } catch (e) {
+            alert("비우기 실패: " + e);
+          }
+        });
+      }
 
       grid.appendChild(div);
     });
+
+    document.getElementById("lockerSummary").textContent =
+            `AVAILABLE: ${available} / PENDING: ${pending} / APPROVED: ${approved}\n` +
+            `빨간색 사물함을 클릭하면 사물함을 비울 수 있습니다.`;
   }
 
-  async function loadPending(){
-    const res = await apiFetch('/api/admin/pending');
-    const data = await res.json();
-    const tb = document.getElementById('pending');
-    tb.innerHTML = '';
-
-    data.forEach(p => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-      <td>${p.studentId}</td>
-      <td>${p.name}</td>
-      <td>${p.lockerNumber}</td>
-      <td>
-        <button class="secondary" data-a="${p.id}">승인</button>
-        <button data-r="${p.id}">거절</button>
-      </td>
-    `;
-      tb.appendChild(tr);
-    });
-
-    tb.querySelectorAll('button[data-a]').forEach(btn => {
-      btn.onclick = async () => {
-        try {
-          const id = btn.getAttribute('data-a');
-          const r = await apiFetch('/api/admin/approve/' + id, { method:'POST' });
-          if (!r.ok) setMsg('승인 실패: ' + await r.text());
-          else {
-            setMsg('승인 완료');
-            await loadGrid();
-            await loadPending();
-          }
-        } catch(e){ setMsg(e.message); }
-      };
-    });
-
-    tb.querySelectorAll('button[data-r]').forEach(btn => {
-      btn.onclick = async () => {
-        try {
-          const id = btn.getAttribute('data-r');
-          if (!confirm('거절 시 신청 기록이 DB에서 삭제됩니다. 계속하시겠습니까?')) return;
-
-          const r = await apiFetch('/api/admin/reject/' + id, { method:'POST' });
-          if (!r.ok) setMsg('거절 실패: ' + await r.text());
-          else {
-            setMsg('거절 완료');
-            await loadGrid();
-            await loadPending();
-          }
-        } catch(e){ setMsg(e.message); }
-      };
-    });
+  async function loadGrid() {
+    const items = await api("/api/public/grid");
+    renderGrid(items);
   }
 
-  document.getElementById('clearBtn').onclick = async () => {
-    try {
-      if (!selectedLocker) return setMsg('사물함을 먼저 클릭하세요.');
+  // ===== Pending list =====
+  function renderPending(list) {
+    const body = document.getElementById("pendingBody");
+    body.innerHTML = "";
 
-      const r = await apiFetch('/api/admin/clear/' + selectedLocker, { method:'POST' });
-      if (!r.ok){
-        setMsg('비우기 실패: ' + await r.text());
-      } else {
-        setMsg('비우기 완료(재신청 가능)');
-        await loadGrid();
-        await loadPending();
-      }
-    } catch(e){ setMsg(e.message); }
-  };
-
-  document.getElementById('resetBtn').onclick = async () => {
-    try {
-      if (!confirm('전체 초기화: 신청/승인 현황이 DB에서 삭제됩니다. 계속하시겠습니까?')) return;
-
-      const r = await apiFetch('/api/admin/reset', { method:'POST' });
-      if (!r.ok){
-        setMsg('초기화 실패: ' + await r.text());
-      } else {
-        setMsg('전체 초기화 완료');
-        selectedLocker = null;
-        document.getElementById('sel').textContent = '없음';
-        await loadGrid();
-        await loadPending();
-      }
-    } catch(e){ setMsg(e.message); }
-  };
-
-  // ✅ SSE (로그인 되었을 때만 동작)
-  try {
-    const es = new EventSource('/sse/admin');
-    es.addEventListener('changed', async () => {
-      try {
-        await loadGrid();
-        await loadPending();
-      } catch(e) { /* 무시 */ }
-    });
-  } catch(e) {
-    // SSE 미지원/차단이면 무시
-  }
-
-  (async function init(){
-    try {
-      await loadGrid();
-      await loadPending();
-    } catch(e){
-      setMsg(e.message);
+    if (!list || list.length === 0) {
+      body.innerHTML = `<tr><td colspan="5" style="color:var(--muted); padding:14px 8px;">대기 신청이 없습니다.</td></tr>`;
+      return;
     }
-  })();
+
+    list.forEach(row => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+          <td>${row.lockerNumber}</td>
+          <td>${escapeHtml(row.studentId)}</td>
+          <td>${escapeHtml(row.name)}</td>
+          <td>${escapeHtml(row.phone)}</td>
+          <td>
+            <div class="actions">
+              <button class="btn small approve" data-id="${row.id}">승인</button>
+              <button class="btn small reject" data-id="${row.id}">거절</button>
+            </div>
+          </td>
+        `;
+      body.appendChild(tr);
+    });
+
+    body.querySelectorAll("button.approve").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        if (!confirm("이 신청을 승인할까요?")) return;
+        try {
+          await api(`/api/admin/approve/${id}`, { method: "POST" });
+          setMsg("승인 완료");
+          await refreshAll();
+        } catch (e) {
+          setMsg("승인 실패: " + e.message);
+        }
+      });
+    });
+
+    body.querySelectorAll("button.reject").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        if (!confirm("이 신청을 거절할까요?")) return;
+        try {
+          await api(`/api/admin/reject/${id}`, { method: "POST" });
+          setMsg("거절 완료");
+          await refreshAll();
+        } catch (e) {
+          setMsg("거절 실패: " + e.message);
+        }
+      });
+    });
+  }
+
+  async function loadPending() {
+    const list = await api("/api/admin/pending");
+    renderPending(list);
+  }
+
+  // ===== Admin actions =====
+  async function resetAll() {
+    if (!confirm("모든 신청/승인을 초기화할까요?")) return;
+    try {
+      await api("/api/admin/reset", { method: "POST" });
+      setMsg("초기화 완료");
+      await refreshAll();
+    } catch (e) {
+      setMsg("초기화 실패: " + e.message);
+    }
+  }
+
+  async function refreshAll() {
+    setMsg("");
+    await Promise.all([loadGrid(), loadPending()]);
+  }
+
+  function escapeHtml(str) {
+    return String(str ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+  }
+
+  refreshAll().catch(e => setMsg("로딩 실패: " + e.message));
 </script>
 </body>
 </html>

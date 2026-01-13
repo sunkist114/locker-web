@@ -43,25 +43,24 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ 누구나 접근 가능 (여기가 먼저!)
                         .requestMatchers(
-                                "/", "/login.html", "/student.html", "/admin-password.html",
+                                "/student.html",
+                                "/login.html",
+                                "/admin-password.html",          // ✅ 로그인 없이 접근 허용
                                 "/api/public/**",
-                                "/css/**", "/js/**", "/images/**", "/favicon.ico"
+                                "/css/**", "/js/**"
                         ).permitAll()
-
-                        // ✅ 관리자만
                         .requestMatchers(
-                                "/admin.html", "/admin-approved.html",
+                                "/admin.html",
+                                "/admin-approved.html",
                                 "/api/admin/**"
                         ).hasRole("ADMIN")
-
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login.html")
-                        .loginProcessingUrl("/login")
-                        .defaultSuccessUrl("/admin.html", true)   // ✅ true 없어야 함
+                        .loginProcessingUrl("/login")         // ⭐ 로그인 처리 URL
+                        .defaultSuccessUrl("/admin.html", true)
                         .failureUrl("/login.html?error")
                         .permitAll()
                 )
