@@ -68,22 +68,25 @@
 ---
 
 ## 📁 프로젝트 구조
+
+```text
 src/main/java/com/cse/locker
-├─ config # Security 설정
-├─ domain # Entity (Locker, Application)
-├─ repo # JPA Repository
-├─ service # 비즈니스 로직
-├─ web # REST API / Controller
-└─ LockerWebApplication.java
+ ├─ config        # Security 설정
+ ├─ domain        # Entity (Locker, Application)
+ ├─ repo          # JPA Repository
+ ├─ service       # 비즈니스 로직
+ ├─ web           # REST API / Controller
+ └─ LockerWebApplication.java
 
 src/main/resources
-├─ static
-│ ├─ student.html
-│ ├─ my-locker.html
-│ ├─ admin.html
-│ └─ admin-approved.html
-├─ application.yml
-└─ application-example.yml
+ ├─ static
+ │   ├─ student.html
+ │   ├─ my-locker.html
+ │   ├─ admin.html
+ │   └─ admin-approved.html
+ ├─ application.yml
+ └─ application-example.yml
+
 
 ---
 
