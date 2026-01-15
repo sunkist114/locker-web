@@ -19,44 +19,46 @@ public class ApiController {
         this.sse = sse;
     }
 
-    // ===== Public =====
-
-    @GetMapping("/api/public/grid")
-    public List<LockerService.LockerDto> grid() {
+    @GetMapping("/api/public/lockers")
+    public List<LockerService.LockerDto> lockers() {
         return service.getLockerGrid();
     }
 
     public record ApplyReq(String studentId, String name, String phone, int lockerNumber) {}
+    public record ApplyRes(String lookupCode) {}
 
     @PostMapping("/api/public/apply")
     public ResponseEntity<?> apply(@RequestBody ApplyReq req) {
-        service.apply(req.studentId(), req.name(), req.phone(), req.lockerNumber());
+        String code = service.apply(req.studentId().trim(), req.name().trim(), req.phone().trim(), req.lockerNumber());
         sse.broadcast("changed");
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new ApplyRes(code));
     }
 
+    // ✅ code 필수
     @GetMapping("/api/public/my-status")
-    public LockerService.MyStatusDto myStatus(@RequestParam String studentId) {
-        return service.getMyStatus(studentId.trim());
+    public LockerService.MyStatusDto myStatus(@RequestParam String studentId, @RequestParam String code) {
+        return service.getMyStatus(studentId.trim(), code.trim());
     }
 
-    // ===== Admin =====
+    // -----------------------
+    // Admin
+    // -----------------------
 
     @GetMapping("/api/admin/pending")
     public List<LockerService.PendingDto> pending() {
-        return service.getPending();
+        return service.getPendingList();
     }
 
-    @PostMapping("/api/admin/approve/{id}")
-    public ResponseEntity<?> approve(@PathVariable long id) {
-        service.approve(id);
+    @PostMapping("/api/admin/approve/{applicationId}")
+    public ResponseEntity<?> approve(@PathVariable long applicationId) {
+        service.approve(applicationId);
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/api/admin/reject/{id}")
-    public ResponseEntity<?> reject(@PathVariable long id) {
-        service.reject(id);
+    @PostMapping("/api/admin/reject/{applicationId}")
+    public ResponseEntity<?> reject(@PathVariable long applicationId) {
+        service.reject(applicationId);
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
     }
@@ -74,4 +76,28 @@ public class ApiController {
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
     }
+
+    // ===== Public: My Locker Page =====
+    @GetMapping("/api/public/my-locker")
+    public LockerService.MyLockerDto myLocker(@RequestParam String studentId, @RequestParam String code) {
+        return service.getMyLocker(studentId.trim(), code.trim());
+    }
+
+    public record SaveMemoReq(String studentId, String code, String memo) {}
+
+    @PostMapping("/api/public/my-locker/memo")
+    public ResponseEntity<?> saveMemo(@RequestBody SaveMemoReq req) {
+        service.saveMyMemo(req.studentId().trim(), req.code().trim(), req.memo());
+        return ResponseEntity.ok().build();
+    }
+
+    public record EmptyReq(String studentId, String code) {}
+
+    @PostMapping("/api/public/my-locker/empty")
+    public ResponseEntity<?> empty(@RequestBody EmptyReq req) {
+        service.emptyMyLocker(req.studentId().trim(), req.code().trim());
+        sse.broadcast("changed");
+        return ResponseEntity.ok().build();
+    }
+
 }

@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>나의 사물함 정보</title>
+
+    <style>
+        :root{
+            --bg:#ffffff;
+            --card:#ffffff;
+            --text:#0b1220;
+            --muted:#5b677a;
+            --border:#e6eaf2;
+            --radius:18px;
+
+            --navy:#0f1f3a;
+            --navy2:#142a4f;
+
+            --skyBorder:#93c5fd;
+
+            --skyBtnBg:#eef6ff;
+            --skyBtnBorder:#cfe2ff;
+            --skyBtnText:#163a63;
+
+            --shadow: 0 14px 34px rgba(15, 23, 42, .10);
+            --shadow2: 0 7px 18px rgba(15, 23, 42, .07);
+
+            --focus: rgba(147,197,253,.22);
+        }
+
+        *{box-sizing:border-box;}
+        html, body{ width:100%; }
+        body{
+            margin:0;
+            font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif;
+            color:var(--text);
+            background:var(--bg);
+            overflow-x:hidden; /* ✅ 가로 스크롤 방지 */
+        }
+
+        .wrap{
+            max-width:980px;
+            margin:34px auto;
+            padding:0 16px 76px;
+        }
+
+        .header{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:14px;
+            margin-bottom:14px;
+        }
+        .headerLeft h1{
+            margin:0;
+            font-size:30px;
+            font-weight:950;
+            letter-spacing:-.02em;
+        }
+        .headerLeft p{
+            margin:6px 0 0;
+            color:var(--muted);
+            font-size:13px;
+            font-weight:700;
+            line-height:1.4;
+        }
+
+        .btn{
+            border:1px solid var(--border);
+            background:#fff;
+            color:var(--text);
+            padding:10px 14px;
+            border-radius:14px;
+            font-weight:900;
+            cursor:pointer;
+            box-shadow:var(--shadow2);
+            user-select:none;
+            transition:transform .12s ease, box-shadow .12s ease, filter .12s ease, background .12s ease;
+            white-space:nowrap;
+        }
+        .btn:hover{
+            transform:translateY(-1px);
+            box-shadow:0 10px 22px rgba(15,23,42,.10);
+        }
+        .btn:active{ transform:translateY(0px); filter:brightness(.98); }
+
+        .btnPrimary{
+            border-color:transparent;
+            background:linear-gradient(135deg, var(--navy), var(--navy2));
+            color:#fff;
+        }
+
+        /* ✅ “내 사물함 비우기” : 연한 하늘색 + 그림자 없음 */
+        .btnSkySoft{
+            border-color:var(--skyBtnBorder);
+            background:var(--skyBtnBg);
+            color:var(--skyBtnText);
+            box-shadow:none;
+        }
+        .btnSkySoft:hover{
+            background:#e6f1ff;
+            transform:translateY(-1px);
+            box-shadow:none;
+        }
+
+        .btnSmall{
+            padding:9px 12px;
+            border-radius:12px;
+            font-size:13px;
+        }
+
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            min-width:0; /* ✅ 내부 overflow 방지 */
+        }
+
+        /* ✅ TOP: 2열 유지(가로 비중 유지), 창 줄이면 같이 줄어들고 가로 스크롤 X */
+        .topCard{
+            padding:18px;
+            display:grid;
+            grid-template-columns: 240px 1fr; /* (이전처럼 왼쪽 더 좁게) */
+            gap:16px;
+            align-items:stretch;
+            min-width:0;
+        }
+
+        @media (max-width:760px){
+            .header{ flex-direction:column; align-items:stretch; }
+            .headerRight{ display:flex; justify-content:flex-end; }
+        }
+
+        /* ✅ 아주 좁아져도 2열 유지 */
+        @media (max-width:520px){
+            .topCard{
+                padding:12px;
+                gap:12px;
+                grid-template-columns: 210px 1fr; /* 함께 줄어듦 */
+            }
+        }
+        @media (max-width:420px){
+            .topCard{
+                padding:10px;
+                gap:10px;
+                grid-template-columns: 190px 1fr;
+            }
+        }
+
+        /* ✅ 좌/우 높이 맞추기 */
+        .topSide{
+            height:100%;
+            min-height:190px;
+            min-width:0;
+        }
+
+        /* ✅ 사물함 박스 */
+        .lockerBox{
+            border:1px solid var(--border);
+            border-radius:18px;
+            padding:12px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:
+                    radial-gradient(closest-side at 30% 25%, rgba(147,197,253,.30), transparent 55%),
+                    linear-gradient(180deg, rgba(15,31,58,.05), transparent 60%),
+                    #fff;
+            position:relative;
+            overflow:hidden;
+            min-width:0;
+        }
+
+        .lockerBox:after{
+            content:"";
+            position:absolute;
+            inset:-1px;
+            border-radius:18px;
+            pointer-events:none;
+            background:linear-gradient(135deg, rgba(147,197,253,.35), rgba(15,31,58,0) 60%);
+            opacity:.8;
+            mask:linear-gradient(#000, #000) content-box, linear-gradient(#000,#000);
+            -webkit-mask:linear-gradient(#000, #000) content-box, linear-gradient(#000,#000);
+            padding:1px;
+            border:1px solid transparent;
+        }
+
+        .lockerSvg{
+            width:190px;
+            height:auto;
+            display:block;
+            position:relative;
+            z-index:1;
+            filter:drop-shadow(0 10px 18px rgba(15,23,42,.08));
+            flex:0 0 auto;
+        }
+        @media (max-width:380px){
+            .lockerSvg{ width:165px; }
+        }
+
+        .infoLines{
+            border:1px solid var(--border);
+            border-radius:18px;
+            padding:12px 14px;
+            background:#fff;
+            display:flex;
+            flex-direction:column;
+            height:100%;
+            min-width:0;
+        }
+
+        .linesFill{
+            display:grid;
+            grid-template-rows: repeat(3, 1fr);
+            height:100%;
+            min-height:190px;
+        }
+        .line{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:0 10px;
+            border-bottom:1px dashed rgba(230,234,242,.95);
+            font-size:16px;
+            min-width:0;
+        }
+        .line:last-child{ border-bottom:none; }
+
+        .label{
+            width:110px;
+            color:var(--muted);
+            font-weight:900;
+            font-size:14px;
+            letter-spacing:.01em;
+            flex:0 0 auto;
+        }
+        .value{
+            font-weight:950;
+            color:var(--text);
+            font-size:17px;
+            min-width:0;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            white-space:nowrap;
+        }
+        .value.mono{ font-variant-numeric: tabular-nums; }
+
+        .msg{
+            margin-top:8px;
+            color:var(--muted);
+            font-size:13px;
+            min-height:18px;
+            white-space:pre-wrap;
+        }
+
+        /* Memo card */
+        .memoCard{
+            margin-top:16px;
+            padding:18px;
+        }
+        .memoHeader{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            margin-bottom:12px;
+        }
+        .memoHeader h2{
+            margin:0;
+            font-size:18px;
+            font-weight:950;
+            letter-spacing:-.01em;
+        }
+        .memoActions{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .recordPanel{
+            border:1px solid var(--border);
+            border-radius:0;
+            background:#fff;
+            overflow:hidden;
+            min-width:0;
+        }
+        .recordSection{
+            padding:12px;
+            min-width:0;
+        }
+        .recordDivider{
+            height:1px;
+            background:var(--border);
+        }
+
+        .itemsTop{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            margin-bottom:10px;
+        }
+        .itemsTitle{
+            font-size:14px;
+            font-weight:950;
+            color:var(--text);
+            letter-spacing:-.01em;
+        }
+        .addBtn{
+            width:38px;height:38px;
+            border-radius:12px;
+            border:1px solid var(--border);
+            background:#fff;
+            cursor:pointer;
+            font-weight:950;
+            box-shadow:0 7px 16px rgba(15,23,42,.06);
+            transition:transform .12s ease, box-shadow .12s ease;
+            flex:0 0 auto;
+        }
+        .addBtn:hover{ transform:translateY(-1px); box-shadow:0 10px 22px rgba(15,23,42,.10); }
+        .addBtn:active{ transform:translateY(0px); }
+
+        .itemList{
+            list-style:none;
+            margin:0;
+            padding:0;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            min-width:0;
+        }
+        .item{
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:10px 10px;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            box-shadow:0 7px 14px rgba(15,23,42,.045);
+            transition:box-shadow .12s ease, transform .12s ease, border-color .12s ease;
+            min-width:0;
+        }
+        .item:hover{
+            border-color:rgba(147,197,253,.55);
+            box-shadow:0 12px 22px rgba(15,23,42,.07);
+            transform:translateY(-1px);
+        }
+        .item.dragging{
+            opacity:.55;
+            transform:scale(.995);
+            box-shadow:none;
+        }
+
+        .handle{
+            width:36px;height:36px;
+            border-radius:12px;
+            border:1px solid var(--border);
+            background:linear-gradient(180deg, rgba(15,31,58,.06), transparent);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:rgba(15,31,58,.70);
+            cursor:grab;
+            user-select:none;
+            flex:0 0 auto;
+        }
+        .handle:active{ cursor:grabbing; }
+
+        .itemText{
+            flex:1 1 auto;
+            font-weight:850;
+            font-size:14px;
+            padding:8px 10px;
+            border-radius:12px;
+            outline:none;
+            border:1px solid transparent;
+            min-height:20px;
+            min-width:0;
+            overflow-wrap:anywhere;
+        }
+        .itemText[contenteditable="true"]:focus{
+            border-color:rgba(147,197,253,.95);
+            background:rgba(147,197,253,.12);
+            box-shadow:0 0 0 4px var(--focus);
+        }
+
+        .menuWrap{ position:relative; flex:0 0 auto; }
+        .dots{
+            width:38px;height:38px;
+            border-radius:12px;
+            border:1px solid var(--border);
+            background:#fff;
+            cursor:pointer;
+            font-weight:950;
+            box-shadow:0 7px 16px rgba(15,23,42,.06);
+            flex:0 0 auto;
+        }
+        .menu{
+            position:absolute;
+            right:0;
+            top:44px;
+            width:144px;
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:14px;
+            box-shadow:var(--shadow);
+            padding:6px;
+            display:none;
+            z-index:10;
+        }
+        .menu.open{ display:block; }
+        .menu button{
+            width:100%;
+            border:none;
+            background:#fff;
+            text-align:left;
+            padding:10px 10px;
+            border-radius:10px;
+            cursor:pointer;
+            font-weight:850;
+            color:var(--text);
+        }
+        .menu button:hover{ background:rgba(15,31,58,.06); }
+
+        .memoAreaTitle{
+            font-size:14px;
+            font-weight:950;
+            margin:0 0 10px;
+            color:var(--text);
+        }
+        textarea{
+            width:100%;
+            min-height:170px;
+            resize:vertical;
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:14px;
+            font-size:15px;
+            outline:none;
+            background:#f8fafc;
+            line-height:1.5;
+            min-width:0;
+        }
+        textarea:focus{
+            border-color:rgba(147,197,253,.95);
+            box-shadow:0 0 0 4px var(--focus);
+            background:#ffffff;
+        }
+
+        .outMsg{
+            margin-top:10px;
+            padding:0 2px;
+        }
+
+        /* ========= Empty locker modal ========= */
+        .modalOverlay{
+            position:fixed;
+            inset:0;
+            background:rgba(15,23,42,.42);
+            display:none;
+            align-items:center;
+            justify-content:center;
+            padding:16px;
+            z-index:9999;
+        }
+        .modalOverlay.open{ display:flex; }
+
+        .modal{
+            width:min(560px, 100%);
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:18px;
+            box-shadow:0 24px 60px rgba(15,23,42,.25);
+            overflow:hidden;
+        }
+
+        .modalHead{
+            padding:12px 14px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            border-bottom:1px solid var(--border);
+            background:#fbfdff;
+        }
+        .modalTitle{
+            display:flex;
+            align-items:center;
+            gap:10px;
+            font-weight:950;
+            letter-spacing:-.01em;
+        }
+        .badgeWarn{
+            width:28px;height:28px;
+            border-radius:10px;
+            background:rgba(147,197,253,.20);
+            border:1px solid rgba(147,197,253,.55);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            color:#163a63;
+            font-weight:950;
+        }
+
+        .iconBtn{
+            width:34px;height:34px;
+            border-radius:12px;
+            border:1px solid var(--border);
+            background:#fff;
+            cursor:pointer;
+            line-height:1;
+        }
+        .iconBtn:hover{ background:rgba(15,31,58,.04); }
+
+        .modalBody{ padding:14px; }
+        .modalDesc{
+            margin:0 0 12px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.5;
+        }
+
+        .fieldLabel{
+            font-size:13px;
+            font-weight:900;
+            color:var(--text);
+            margin:10px 0 8px;
+        }
+        .input{
+            width:100%;
+            border:1px solid var(--border);
+            border-radius:14px;
+            padding:12px 12px;
+            font-size:15px;
+            outline:none;
+            background:#fff;
+        }
+        .input:focus{
+            border-color:rgba(147,197,253,.95);
+            box-shadow:0 0 0 4px var(--focus);
+        }
+
+        .modalFoot{
+            padding:12px 14px;
+            display:flex;
+            justify-content:flex-end;
+            gap:10px;
+            border-top:1px solid var(--border);
+            background:#fbfdff;
+        }
+
+        .btnDangerSoft{
+            border-color:rgba(147,197,253,.85);
+            background:rgba(147,197,253,.20);
+            color:#0f1f3a;
+            box-shadow:none;
+        }
+        .btnDangerSoft:hover{
+            background:rgba(147,197,253,.28);
+            box-shadow:none;
+        }
+
+        body.modalOpen{ overflow:hidden; }
+    </style>
+</head>
+
+<body>
+<div class="wrap">
+    <div class="header">
+        <div class="headerLeft">
+            <h1>나의 사물함 정보</h1>
+            <p>현재 사물함 사용 상태와 메모를 관리할 수 있어요.</p>
+        </div>
+        <div class="headerRight"></div>
+    </div>
+
+    <!-- TOP 카드 -->
+    <div class="card topCard">
+        <div class="lockerBox topSide">
+            <!-- 사물함 SVG -->
+            <svg class="lockerSvg" viewBox="0 0 320 240" aria-label="사물함">
+                <defs>
+                    <linearGradient id="cab" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0" stop-color="#eaf3ff"/>
+                        <stop offset="1" stop-color="#dbeafe"/>
+                    </linearGradient>
+                    <linearGradient id="door" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0" stop-color="#ffffff" stop-opacity=".92"/>
+                        <stop offset="1" stop-color="#dbeafe" stop-opacity=".9"/>
+                    </linearGradient>
+                </defs>
+
+                <ellipse cx="160" cy="214" rx="92" ry="14" fill="rgba(15,23,42,.10)"/>
+                <rect x="76" y="18" width="168" height="190" rx="18" fill="url(#cab)" stroke="#93c5fd" stroke-width="3"/>
+                <line x1="160" y1="26" x2="160" y2="202" stroke="#93c5fd" stroke-width="3" opacity=".9"/>
+
+                <rect x="86" y="28" width="70" height="170" rx="14" fill="url(#door)" stroke="rgba(15,23,42,.10)"/>
+                <g opacity=".55" fill="#94a3b8">
+                    <rect x="96" y="46" width="50" height="6" rx="3"/>
+                    <rect x="96" y="60" width="50" height="6" rx="3"/>
+                    <rect x="96" y="74" width="50" height="6" rx="3"/>
+                </g>
+
+                <rect x="140" y="102" width="8" height="54" rx="4" fill="#64748b"/>
+                <circle cx="144" cy="128" r="4" fill="#e2e8f0"/>
+
+                <rect x="164" y="28" width="70" height="170" rx="14" fill="url(#door)" stroke="rgba(15,23,42,.10)"/>
+                <g opacity=".55" fill="#94a3b8">
+                    <rect x="174" y="46" width="50" height="6" rx="3"/>
+                    <rect x="174" y="60" width="50" height="6" rx="3"/>
+                    <rect x="174" y="74" width="50" height="6" rx="3"/>
+                </g>
+            </svg>
+        </div>
+
+        <div class="infoLines topSide">
+            <div class="linesFill">
+                <div class="line">
+                    <div class="label">학번</div>
+                    <div class="value mono" id="vStudentId">-</div>
+                </div>
+                <div class="line">
+                    <div class="label">이름</div>
+                    <div class="value" id="vName">-</div>
+                </div>
+                <div class="line">
+                    <div class="label">사물함 번호</div>
+                    <div class="value"><span class="mono" id="vLockerNo">-</span>번</div>
+                </div>
+            </div>
+            <div class="msg" id="topMsg"></div>
+        </div>
+    </div>
+
+    <!-- 기록 카드 -->
+    <div class="card memoCard">
+        <div class="memoHeader">
+            <h2>사물함 기록</h2>
+            <div class="memoActions">
+                <button class="btn btnSkySoft btnSmall" id="emptyBtnTop" type="button">내 사물함 비우기</button>
+                <button class="btn btnPrimary btnSmall" id="saveBtn" type="button">저장</button>
+            </div>
+        </div>
+
+        <div class="recordPanel">
+            <div class="recordSection">
+                <div class="itemsTop">
+                    <div class="itemsTitle">LIST</div>
+                    <button class="addBtn" id="addItemBtn" type="button" title="물건 추가">＋</button>
+                </div>
+
+                <ul class="itemList" id="itemList"></ul>
+                <div class="msg" id="itemsMsg"></div>
+            </div>
+
+            <div class="recordDivider"></div>
+
+            <div class="recordSection">
+                <div class="memoAreaTitle">MEMO</div>
+                <textarea id="memo" placeholder="자유롭게 메모를 작성하세요..."></textarea>
+            </div>
+        </div>
+
+        <div class="msg outMsg" id="memoMsg"></div>
+        <div class="msg outMsg" id="emptyMsg"></div>
+    </div>
+</div>
+
+<!-- ====== Empty locker modal ====== -->
+<div class="modalOverlay" id="emptyModalOverlay" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="emptyModalTitle">
+        <div class="modalHead">
+            <div class="modalTitle" id="emptyModalTitle">
+                <div class="badgeWarn">!</div>
+                사물함 비우기
+            </div>
+            <button class="iconBtn" type="button" id="emptyModalClose" aria-label="닫기">✕</button>
+        </div>
+
+        <div class="modalBody">
+            <!-- ✅ 기존 학번 확인 유지 -->
+            <div class="fieldLabel">학번을 입력하세요</div>
+            <input class="input" id="emptyModalInput" placeholder="예: 20244029" autocomplete="off" inputmode="numeric" />
+
+            <!-- ✅ A번: 확인코드도 같이 입력 -->
+            <div class="fieldLabel">확인코드를 입력하세요</div>
+            <input class="input" id="emptyModalCode" placeholder="6자리 확인코드" autocomplete="off" inputmode="numeric" />
+        </div>
+
+        <div class="modalFoot">
+            <button class="btn btnSmall" type="button" id="emptyModalCancel">취소</button>
+            <button class="btn btnSmall btnDangerSoft" type="button" id="emptyModalConfirm">비우기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const el = (id) => document.getElementById(id);
+
+    function qsAny(keys){
+        const u = new URL(window.location.href);
+        for (const k of keys){
+            const v = (u.searchParams.get(k) || "").trim();
+            if (v) return v;
+        }
+        return "";
+    }
+
+    // --------------------------
+    // memo serialization format
+    // --------------------------
+    const MARK_ITEMS = "----ITEMS----";
+    const MARK_NOTE  = "----NOTE----";
+
+    function serializeMemo(items, note){
+        const safeItems = (items || []).map(s => (s || "").trim()).filter(Boolean);
+        const safeNote = (note || "");
+        return `${MARK_ITEMS}\n${safeItems.map(x => `- ${x}`).join("\n")}\n${MARK_NOTE}\n${safeNote}`.trim();
+    }
+
+    function parseMemo(raw){
+        const text = (raw || "").trim();
+        if (!text) return { items: [], note: "" };
+
+        const iItems = text.indexOf(MARK_ITEMS);
+        const iNote  = text.indexOf(MARK_NOTE);
+
+        if (iItems === -1 || iNote === -1 || iNote < iItems){
+            return { items: [], note: raw || "" };
+        }
+
+        const itemsPart = text.slice(iItems + MARK_ITEMS.length, iNote).trim();
+        const notePart  = text.slice(iNote + MARK_NOTE.length).trim();
+
+        const items = itemsPart
+            .split("\n")
+            .map(line => line.replace(/^\s*-\s*/, "").trim())
+            .filter(Boolean);
+
+        return { items, note: notePart };
+    }
+
+    // --------------------------
+    // drag & drop list
+    // --------------------------
+    let dragSrcEl = null;
+
+    function buildItemRow(text){
+        const li = document.createElement("li");
+        li.className = "item";
+        li.setAttribute("draggable", "true");
+
+        const handle = document.createElement("div");
+        handle.className = "handle";
+        handle.title = "드래그해서 순서 변경";
+        handle.textContent = "⋮⋮";
+
+        const content = document.createElement("div");
+        content.className = "itemText";
+        content.contentEditable = "true";
+        content.spellcheck = false;
+        content.textContent = text || "";
+
+        const menuWrap = document.createElement("div");
+        menuWrap.className = "menuWrap";
+
+        const dots = document.createElement("button");
+        dots.type = "button";
+        dots.className = "dots";
+        dots.textContent = "…";
+        dots.title = "메뉴";
+
+        const menu = document.createElement("div");
+        menu.className = "menu";
+
+        const btnEdit = document.createElement("button");
+        btnEdit.type = "button";
+        btnEdit.textContent = "수정";
+        btnEdit.addEventListener("click", () => {
+            menu.classList.remove("open");
+            content.focus();
+            const range = document.createRange();
+            range.selectNodeContents(content);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        });
+
+        const btnDelete = document.createElement("button");
+        btnDelete.type = "button";
+        btnDelete.textContent = "삭제";
+        btnDelete.addEventListener("click", () => {
+            menu.classList.remove("open");
+            li.remove();
+        });
+
+        menu.appendChild(btnEdit);
+        menu.appendChild(btnDelete);
+
+        dots.addEventListener("click", (e) => {
+            e.stopPropagation();
+            document.querySelectorAll(".menu.open").forEach(m => m.classList.remove("open"));
+            menu.classList.toggle("open");
+        });
+
+        menuWrap.appendChild(dots);
+        menuWrap.appendChild(menu);
+
+        li.appendChild(handle);
+        li.appendChild(content);
+        li.appendChild(menuWrap);
+
+        li.addEventListener("dragstart", (e) => {
+            dragSrcEl = li;
+            li.classList.add("dragging");
+            e.dataTransfer.effectAllowed = "move";
+            e.dataTransfer.setData("text/plain", "drag");
+        });
+
+        li.addEventListener("dragend", () => {
+            li.classList.remove("dragging");
+            dragSrcEl = null;
+        });
+
+        li.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+        });
+
+        li.addEventListener("drop", (e) => {
+            e.preventDefault();
+            if (!dragSrcEl || dragSrcEl === li) return;
+
+            const list = el("itemList");
+            const nodes = Array.from(list.children);
+            const srcIndex = nodes.indexOf(dragSrcEl);
+            const dstIndex = nodes.indexOf(li);
+
+            if (srcIndex < dstIndex) list.insertBefore(dragSrcEl, li.nextSibling);
+            else list.insertBefore(dragSrcEl, li);
+        });
+
+        return li;
+    }
+
+    function getItemsFromUI(){
+        const list = el("itemList");
+        return Array.from(list.querySelectorAll(".itemText"))
+            .map(x => (x.textContent || "").trim())
+            .filter(Boolean);
+    }
+
+    function setItemsToUI(items){
+        const list = el("itemList");
+        list.innerHTML = "";
+        (items || []).forEach(t => list.appendChild(buildItemRow(t)));
+    }
+
+    document.addEventListener("click", () => {
+        document.querySelectorAll(".menu.open").forEach(m => m.classList.remove("open"));
+    });
+
+    // --------------------------
+    // ✅ studentId + code (A번)
+    // --------------------------
+    const studentId = qsAny(["studentId","studentID","id","sid"]);
+    const code = qsAny(["code","lookupCode","token"]);
+
+    if (!studentId || !code){
+        alert("잘못된 접근입니다. 신청 페이지에서 학번+확인코드로 조회해주세요.");
+        window.location.replace("/student.html");
+    }
+
+    function pickLockerNumber(data){
+        const candidates = [
+            data?.lockerNumber, data?.lockerNo, data?.locker,
+            data?.locker_id, data?.lockerId, data?.locker_num, data?.lockerNum
+        ];
+        for (const c of candidates){
+            if (c !== undefined && c !== null && String(c).trim() !== "") return String(c);
+        }
+        return "-";
+    }
+
+    // --------------------------
+    // ✅ load (code 포함)
+    // --------------------------
+    async function load(){
+        el("topMsg").textContent = "불러오는 중...";
+
+        const r = await fetch(
+            "/api/public/my-locker?studentId=" + encodeURIComponent(studentId) +
+            "&code=" + encodeURIComponent(code)
+        );
+
+        let data = null;
+        try{ data = await r.json(); }catch(e){}
+
+        if (!r.ok || !data){
+            alert("불러오기 실패: 서버 응답이 올바르지 않습니다.");
+            window.location.replace("/student.html");
+            return;
+        }
+
+        if (data.status !== "APPROVED"){
+            alert(data.message || "현재 사용 중인 사물함이 없습니다.");
+            window.location.replace("/student.html");
+            return;
+        }
+
+        el("topMsg").textContent = "";
+        el("vStudentId").textContent = data.studentId || studentId;
+        el("vName").textContent = data.name || "-";
+        el("vLockerNo").textContent = pickLockerNumber(data);
+
+        const parsed = parseMemo(data.memo || "");
+        setItemsToUI(parsed.items);
+        el("memo").value = parsed.note || "";
+    }
+
+    // --------------------------
+    // ✅ save (code 포함)
+    // --------------------------
+    async function saveAll(){
+        el("memoMsg").textContent = "저장 중...";
+        const items = getItemsFromUI();
+        const note = el("memo").value;
+        const memoCombined = serializeMemo(items, note);
+
+        const r = await fetch("/api/public/my-locker/memo", {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({ studentId, code, memo: memoCombined })
+        });
+
+        if (!r.ok){
+            const t = await r.text();
+            el("memoMsg").textContent = "저장 실패: " + t;
+            return;
+        }
+
+        el("memoMsg").textContent = "저장되었습니다.";
+        setTimeout(() => (el("memoMsg").textContent = ""), 1400);
+    }
+
+    // --------------------------
+    // empty locker (모달)
+    // --------------------------
+    function openEmptyModal(){
+        el("emptyModalInput").value = "";
+        el("emptyModalCode").value = "";
+        el("emptyModalOverlay").classList.add("open");
+        document.body.classList.add("modalOpen");
+        el("emptyModalOverlay").setAttribute("aria-hidden","false");
+
+        el("emptyModalConfirm").disabled = false;
+        el("emptyModalCancel").disabled = false;
+
+        setTimeout(() => el("emptyModalInput").focus(), 0);
+    }
+
+    function closeEmptyModal(){
+        el("emptyModalOverlay").classList.remove("open");
+        document.body.classList.remove("modalOpen");
+        el("emptyModalOverlay").setAttribute("aria-hidden","true");
+    }
+
+    async function runEmptyLocker(){
+        const typed = (el("emptyModalInput").value || "").trim();
+        const typedCode = (el("emptyModalCode").value || "").trim();
+
+        if (!typed){
+            alert("학번을 입력해주세요.");
+            return;
+        }
+        if (!/^\d+$/.test(typed)){
+            alert("학번은 숫자만 입력해주세요.");
+            return;
+        }
+        if (typed !== studentId){
+            alert("학번이 일치하지 않습니다.");
+            return;
+        }
+
+        if (!typedCode){
+            alert("확인코드를 입력해주세요.");
+            return;
+        }
+        if (!/^\d{6}$/.test(typedCode)){
+            alert("확인코드는 6자리 숫자입니다.");
+            return;
+        }
+
+        // URL에 있는 code와 다르면, 잘못 입력한 것이므로 막기 (서버 검증 전 1차 방어)
+        if (typedCode !== code){
+            alert("확인코드가 일치하지 않습니다.");
+            return;
+        }
+
+        el("emptyModalConfirm").disabled = true;
+        el("emptyModalCancel").disabled = true;
+
+        const r = await fetch("/api/public/my-locker/empty", {
+            method:"POST",
+            headers:{ "Content-Type":"application/json" },
+            body: JSON.stringify({ studentId, code })
+        });
+
+        if (!r.ok){
+            const t = await r.text();
+            alert("실패: " + t);
+            el("emptyModalConfirm").disabled = false;
+            el("emptyModalCancel").disabled = false;
+            return;
+        }
+
+        closeEmptyModal();
+        el("emptyMsg").textContent = "사물함을 비웠습니다.";
+        setTimeout(() => window.location.replace("/student.html"), 800);
+    }
+
+    el("emptyModalOverlay").addEventListener("click", (e) => {
+        if (e.target === el("emptyModalOverlay")) closeEmptyModal();
+    });
+    el("emptyModalClose").addEventListener("click", closeEmptyModal);
+    el("emptyModalCancel").addEventListener("click", closeEmptyModal);
+    el("emptyModalConfirm").addEventListener("click", runEmptyLocker);
+
+    el("emptyModalInput").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") runEmptyLocker();
+        if (e.key === "Escape") closeEmptyModal();
+    });
+    el("emptyModalCode").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") runEmptyLocker();
+        if (e.key === "Escape") closeEmptyModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && el("emptyModalOverlay").classList.contains("open")) closeEmptyModal();
+    });
+
+    // --------------------------
+    // item add
+    // --------------------------
+    function addItem(){
+        const list = el("itemList");
+        const li = buildItemRow("");
+        list.appendChild(li);
+        li.querySelector(".itemText").focus();
+
+        el("itemsMsg").textContent = "드래그해서 순서를 바꿀 수 있어요.";
+        setTimeout(() => (el("itemsMsg").textContent = ""), 1400);
+    }
+
+    // --------------------------
+    // wire
+    // --------------------------
+    el("saveBtn").addEventListener("click", saveAll);
+    el("emptyBtnTop").addEventListener("click", openEmptyModal);
+    el("addItemBtn").addEventListener("click", addItem);
+
+    load();
+</script>
+</body>
+</html>

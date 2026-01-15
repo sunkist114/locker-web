@@ -34,6 +34,13 @@ public class Application {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    // ✅ 사물함 메모(물건 기록)
+    @Column(columnDefinition = "text")
+    private String memo;
+
+    @Column(name = "lookup_code_hash")
+    private String lookupCodeHash;
+
     // ✅ JPA용 기본 생성자 (그대로 둬야 함)
     protected Application() {}
 
@@ -44,6 +51,7 @@ public class Application {
         this.phone = phone;
         this.lockerNumber = lockerNumber;
         this.status = status;
+        this.memo = "";
     }
 
     @PrePersist
@@ -59,7 +67,11 @@ public class Application {
     public int getLockerNumber() { return lockerNumber; }
     public Status getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }
+    public String getMemo() { return memo; }
+    public String getLookupCodeHash() { return lookupCodeHash; }
 
     // setters (필요하면)
     public void setStatus(Status status) { this.status = status; }
+    public void setMemo(String memo) { this.memo = memo; }
+    public void setLookupCodeHash(String lookupCodeHash) { this.lookupCodeHash = lookupCodeHash; }
 }

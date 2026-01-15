@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="ko">
 <head>
-    <meta charset="utf-8"/>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>사물함 신청</title>
+    <title>컴퓨터공학과 사물함 신청</title>
     <style>
         :root{
             --bg:#f5f6f8;
@@ -11,40 +11,41 @@
             --text:#111827;
             --muted:#6b7280;
             --border:#e5e7eb;
-
-            /* 관리자 페이지와 색감 통일 */
-            --good: rgba(34,197,94,0.25);   /* AVAILABLE */
-            --warn: rgba(251,191,36,0.35);  /* PENDING/RESERVED */
-            --bad:  rgba(239,68,68,0.25);   /* APPROVED */
-
-            --radius:14px;
+            --primary:#111827;
             --btn:#0f172a;
             --btnText:#fff;
+            --good:#22c55e;
+            --warn:#fbbf24;
+            --bad:#ef4444;
+            --radius:14px;
         }
-
         *{ box-sizing:border-box; }
         body{
             margin:0;
             font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            background:var(--bg);
+            color:var(--text);
         }
 
-        .wrap{
-            max-width:1100px;
-            margin: 28px auto;
-            padding: 0 16px;
+        .wrap{ max-width:1100px; margin:28px auto; padding:0 16px; }
+
+        .card{
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
+            padding:16px;
+            box-shadow:0 6px 16px rgba(0,0,0,0.04);
         }
 
-        .title{
+        .page-title{
             font-size:20px;
-            font-weight:900;
-            margin: 0 0 6px;
+            font-weight:800;
+            margin-bottom:14px;
         }
-        .sub{
+        .topNote{
             color:var(--muted);
             font-size:12px;
-            margin: 0 0 14px;
+            margin:-6px 0 14px;
             line-height:1.4;
         }
 
@@ -53,184 +54,268 @@
             grid-template-columns: 1.2fr 0.8fr;
             gap:14px;
         }
-        @media (max-width: 960px){
-            .grid{ grid-template-columns: 1fr; }
+        @media (max-width:960px){
+            .grid{ grid-template-columns:1fr; }
         }
 
-        .card{
-            background:var(--card);
-            border:1px solid var(--border);
-            border-radius: var(--radius);
-            padding:16px;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.04);
-        }
-
-        .card h2{
+        h2{
             margin:0 0 8px;
             font-size:16px;
-            font-weight:900;
         }
 
-        /* legend (관리자 페이지 스타일) */
-        .legend{
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap;
-            margin-bottom:10px;
-            align-items:center;
-        }
-        .chip{
-            display:flex;
-            align-items:center;
-            gap:6px;
-            font-size:12px;
-            color:var(--muted);
-            font-weight:800;
-        }
-        .dot{
-            width:10px;
-            height:10px;
-            border-radius:50%;
-        }
+        .legend{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+        .chip{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+        .dot{ width:10px; height:10px; border-radius:50%; }
         .dot.good{ background: rgba(34,197,94,0.6); }
         .dot.warn{ background: rgba(251,191,36,0.8); }
-        .dot.bad { background: rgba(239,68,68,0.75); }
+        .dot.bad{ background: rgba(239,68,68,0.75); }
 
-        /* 사물함 그리드: 가로 스크롤 안 생기게 */
         .locker-grid{
             display:grid;
-            grid-template-columns: repeat(10, minmax(0, 1fr));
+            grid-template-columns: repeat(10, 1fr);
             gap:8px;
             padding:10px;
             border:1px solid var(--border);
             border-radius:12px;
             background:#fafafa;
+            overflow-x:auto;
         }
-        /* 화면이 좁아질수록 버튼이 자동으로 더 작아지게 */
-        @media (max-width: 420px){
-            .locker-grid{ gap:6px; padding:8px; }
+        @media (max-width:560px){
+            .locker-grid{ grid-template-columns: repeat(5, 1fr); }
         }
 
         .locker{
             border-radius:10px;
             padding:10px 0;
             text-align:center;
-            font-weight:900;
+            font-weight:800;
             font-size:13px;
-            border: 1px solid transparent;
+            border:1px solid transparent;
             user-select:none;
             cursor:pointer;
         }
-        @media (max-width: 420px){
-            .locker{ padding:9px 0; font-size:12px; border-radius:9px; }
+        .locker.available{ background: rgba(34,197,94,0.25); border-color: rgba(34,197,94,0.25); }
+        .locker.pending{ background: rgba(251,191,36,0.35); border-color: rgba(251,191,36,0.35); }
+        .locker.approved{ background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.25); }
+
+        .toast{
+            margin-top:10px;
+            font-size:13px;
+            color:var(--muted);
+            line-height:1.5;
+            white-space:pre-line;
         }
 
-        .locker.available{ background: var(--good); border-color: var(--good); }
-        .locker.pending { background: var(--warn); border-color: var(--warn); }
-        .locker.approved{ background: var(--bad);  border-color: var(--bad); }
-
-        .locker.disabled{
-            cursor:not-allowed;
-            opacity:0.9;
-        }
-        .locker.selected{
-            outline:3px solid rgba(17,24,39,.25);
-        }
-
-        .label{
+        .hint{
+            color:var(--muted);
             font-size:12px;
-            font-weight:900;
-            color:var(--text);
-            margin: 10px 0 6px;
+            margin-bottom:12px;
+            line-height:1.4;
         }
-
+        .formRow{ display:grid; gap:10px; margin-top:10px; }
+        label{ font-size:12px; color:var(--muted); font-weight:800; }
         input{
             width:100%;
             padding:12px 12px;
+            border-radius:12px;
             border:1px solid var(--border);
-            border-radius:10px;
-            font-size:14px;
             outline:none;
+            font-size:14px;
             background:#fff;
         }
         input:focus{ border-color:#111827; }
 
         .btn{
             width:100%;
-            padding:12px 12px;
-            border-radius:10px;
-            border:1px solid var(--btn);
-            background: var(--btn);
-            color: var(--btnText);
-            cursor:pointer;
-            font-weight:900;
-            font-size:14px;
-            margin-top:12px;
-        }
-        .btn.secondary{
-            background:#fff;
+            border:1px solid var(--border);
+            background:var(--card);
             color:var(--text);
-            border-color: var(--border);
-        }
-        .btn:hover{ filter:brightness(1.05); }
-
-        .msg{
+            padding:12px 12px;
+            border-radius:12px;
+            cursor:pointer;
+            font-weight:800;
+            font-size:13px;
             margin-top:10px;
+        }
+        .btn.primary{
+            background:var(--btn);
+            color:var(--btnText);
+            border-color:var(--btn);
+        }
+
+        .selected{
+            margin-top:4px;
+            font-size:13px;
+            color:var(--muted);
+        }
+        .myBox{
+            margin-top:12px;
             font-size:13px;
             color:var(--muted);
             white-space:pre-wrap;
-            min-height:22px;
-            line-height:1.5;
         }
+        #myStatusBox{ display:none; }
 
-        .small-sub{
-            font-size:12px;
-            color:var(--muted);
-            margin-top:6px;
+        /* ✅ Modal */
+        .modal-overlay{
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.35);
+            padding: 16px;
+            z-index: 9999;
+        }
+        .modal-overlay.show{ display: flex; }
+
+        .modal-card{
+            width: min(420px, 100%);
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow:0 18px 50px rgba(0,0,0,.18);
+            overflow: hidden;
+        }
+        .modal-header{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .modal-title{ margin:0; font-size: 16px; }
+        .modal-close{
+            border: none;
+            background: transparent;
+            font-size: 22px;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--muted);
+        }
+        .modal-body{ padding: 14px 16px; }
+        .modal-desc{
+            margin: 0 0 12px 0;
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .modal-label{
+            display:block;
+            font-size: 13px;
+            margin: 10px 0 6px;
+            color: var(--muted);
+            font-weight: 800;
+        }
+        .modal-input{
+            width:100%;
+            padding: 12px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+        }
+        .modal-input:focus{
+            border-color: #cbd5e1;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, .08);
+        }
+        .modal-error{
+            margin: 10px 0 0 0;
+            color: #ef4444;
+            font-size: 12px;
+        }
+        .modal-actions{
+            display:flex;
+            gap: 8px;
+            padding: 14px 16px;
+            border-top: 1px solid var(--border);
+            justify-content:flex-end;
+        }
+        .modal-btn{
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: 700;
+        }
+        .modal-btn.ghost{ background:#fff; }
+        .modal-btn.primary{
+            background: var(--btn);
+            color: var(--btnText);
+            border-color: var(--btn);
         }
     </style>
 </head>
 
 <body>
+
+<!-- ✅ 나의 사물함 조회 모달 -->
+<div id="studentIdModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="studentIdModalTitle">
+        <div class="modal-header">
+            <h3 id="studentIdModalTitle" class="modal-title">나의 사물함 조회</h3>
+            <button type="button" class="modal-close" id="studentIdModalClose" aria-label="닫기">×</button>
+        </div>
+
+        <div class="modal-body">
+            <p class="modal-desc">확인코드 분실 시 관리자에게 문의 바랍니다.</p>
+
+            <label class="modal-label" for="studentIdModalInput">학번</label>
+            <input id="studentIdModalInput" class="modal-input" type="text" inputmode="numeric"
+                   placeholder="20244000" autocomplete="off"/>
+
+            <label class="modal-label" for="studentIdModalCode">확인코드</label>
+            <input id="studentIdModalCode" class="modal-input" type="text" inputmode="numeric"
+                   placeholder="6자리 확인코드" autocomplete="off"/>
+
+            <p id="studentIdModalError" class="modal-error" style="display:none;"></p>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="modal-btn ghost" id="studentIdModalCancel">취소</button>
+            <button type="button" class="modal-btn primary" id="studentIdModalOk">조회</button>
+        </div>
+    </div>
+</div>
+
 <div class="wrap">
-    <div class="title">사물함 신청</div>
-    <div class="sub">사물함을 선택 후, 학생 본인의 정보를 입력하여주세요.</div>
+    <div class="page-title">사물함 신청</div>
+    <div class="topNote">원하는 사물함을 클릭 후, 학생 본인 정보를 입력해주세요.</div>
 
     <div class="grid">
-        <!-- Left: Locker grid -->
         <div class="card">
             <h2>현재 사물함 현황</h2>
-
             <div class="legend">
                 <div class="chip"><span class="dot good"></span>AVAILABLE</div>
                 <div class="chip"><span class="dot warn"></span>PENDING</div>
                 <div class="chip"><span class="dot bad"></span>APPROVED</div>
             </div>
 
-            <div id="grid" class="locker-grid"></div>
-            <div id="gridSummary" class="msg"></div>
+            <div id="lockerGrid" class="locker-grid"></div>
+            <div class="toast" id="lockerSummary">로딩 중...</div>
         </div>
 
-        <!-- Right: Apply form -->
         <div class="card">
             <h2>신청 정보</h2>
-            <div class="small-sub">선택 사물함: <b id="sel">없음</b></div>
+            <div class="selected" id="selectedText">선택 사물함: 없음</div>
 
-            <div class="label">학번</div>
-            <input id="studentId" placeholder="예) 20244000"/>
+            <div class="formRow">
+                <div>
+                    <label>학번</label>
+                    <input id="studentId" placeholder="20244000" />
+                </div>
+                <div>
+                    <label>이름</label>
+                    <input id="name" placeholder="강민선" />
+                </div>
+                <div>
+                    <label>전화번호</label>
+                    <input id="phone" placeholder="01012345678" />
+                </div>
+            </div>
 
-            <div class="label">이름</div>
-            <input id="name" placeholder="예) 강민선"/>
+            <button class="btn primary" id="applyBtn">신청하기</button>
+            <button class="btn" id="myBtn">나의 사물함 조회</button>
 
-            <div class="label">전화번호</div>
-            <input id="phone" placeholder="예) 01012345678"/>
-
-            <button id="applyBtn" class="btn">신청하기</button>
-
-            <button id="checkBtn" class="btn secondary" type="button">나의 사물함 조회</button>
-            <div id="myStatusBox" class="msg"></div>
-
-            <div id="msg" class="msg"></div>
+            <div class="myBox" id="myStatusBox"></div>
         </div>
     </div>
 </div>
@@ -238,14 +323,18 @@
 <script>
     let selectedLocker = null;
 
-    function setMsg(t){ document.getElementById('msg').textContent = t || ''; }
-    function setMyStatus(t){ document.getElementById('myStatusBox').textContent = t || ''; }
-
-    function sanitizePhone(p){
-        return (p || '').replace(/[^0-9]/g, '');
+    function setMyStatus(msg){
+        const box = document.getElementById('myStatusBox');
+        const text = (msg ?? '').toString().trim();
+        if (!text) {
+            box.textContent = '';
+            box.style.display = 'none';
+            return;
+        }
+        box.textContent = text;
+        box.style.display = 'block';
     }
 
-    // ✅ "열 기준(1,6,11...)" 표시 순서 만들기 (5행 x 10열)
     function buildDisplayOrder(rows=5, cols=10){
         const order = [];
         for (let r = 1; r <= rows; r++){
@@ -253,138 +342,209 @@
                 order.push(r + rows * (c - 1));
             }
         }
-        return order; // [1,6,11,...,46, 2,7,12,...]
+        return order;
     }
 
-    function stateToClass(state){
-        const s = (state || 'AVAILABLE').toUpperCase();
-        if (s === 'APPROVED') return 'approved';
-        if (s === 'PENDING' || s === 'RESERVED') return 'pending';
-        return 'available';
-    }
-
-    async function loadGrid(){
-        const r = await fetch('/api/public/grid');
-        const data = await r.json();
-
-        // lockerNumber -> item 매핑
-        const map = new Map();
-        data.forEach(x => map.set(Number(x.lockerNumber), x));
-
-        const grid = document.getElementById('grid');
+    function renderGrid(items){
+        const grid = document.getElementById('lockerGrid');
         grid.innerHTML = '';
 
+        const map = new Map();
+        (items || []).forEach(x => map.set(Number(x.lockerNumber), x));
+
         let available=0, pending=0, approved=0;
-
-        // ✅ 원하는 표시 순서대로 렌더링
         const order = buildDisplayOrder(5, 10);
-        order.forEach(num => {
-            const item = map.get(num) || { lockerNumber:num, state:'AVAILABLE', studentId:null };
 
-            const state = (item.state || 'AVAILABLE').toUpperCase();
-            const cls = stateToClass(state);
+        order.forEach(num => {
+            const it = map.get(num);
+            const state = (it?.state || 'AVAILABLE').toUpperCase();
 
             const div = document.createElement('div');
+            const cls =
+                (state === 'APPROVED') ? 'approved' :
+                    (state === 'PENDING' || state === 'RESERVED') ? 'pending' :
+                        'available';
+
             div.className = 'locker ' + cls;
             div.textContent = num;
 
-            // 카운트
             if (cls === 'available') available++;
             else if (cls === 'pending') pending++;
             else approved++;
 
-            const disabled = (state !== 'AVAILABLE');
-            if (disabled) div.classList.add('disabled');
-
-            div.title = state + (item.studentId ? (' / ' + item.studentId) : '');
-
-            div.onclick = () => {
-                if (disabled) return;
-
+            div.addEventListener('click', () => {
+                if (cls !== 'available') {
+                    alert('이 사물함은 선택할 수 없습니다.');
+                    return;
+                }
                 selectedLocker = num;
-
-                document.querySelectorAll('.locker').forEach(x => x.classList.remove('selected'));
-                div.classList.add('selected');
-
-                document.getElementById('sel').textContent = num + '번';
-                setMsg('');
-            };
+                document.getElementById('selectedText').textContent = '선택 사물함: ' + selectedLocker + '번';
+            });
 
             grid.appendChild(div);
         });
 
-        document.getElementById('gridSummary').textContent =
-            `AVAILABLE: ${available} / PENDING: ${pending} / APPROVED: ${approved}`;
+        document.getElementById('lockerSummary').textContent =
+            `신청 가능: ${available} / 승인 대기: ${pending} / 이용 중: ${approved}`;
+    }
+
+    async function loadGrid(){
+        const res = await fetch('/api/public/lockers');
+        const data = await res.json();
+        renderGrid(data);
     }
 
     async function apply(){
-        const studentId = document.getElementById('studentId').value.trim();
-        const name = document.getElementById('name').value.trim();
-        const phone = sanitizePhone(document.getElementById('phone').value.trim());
-
-        if (!selectedLocker) return setMsg('사물함을 먼저 선택하세요.');
-        if (!studentId) return setMsg('학번을 입력하세요.');
-        if (!name) return setMsg('이름을 입력하세요.');
-        if (!phone) return setMsg('전화번호를 입력하세요.');
-
-        setMsg('신청 중...');
-
-        const payload = { studentId, name, phone, lockerNumber: selectedLocker };
-
-        const r = await fetch('/api/public/apply', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify(payload)
-        });
-
-        if (!r.ok){
-            const t = await r.text();
-            setMsg('신청 실패: ' + t);
+        if (!selectedLocker) {
+            alert('사물함을 먼저 선택하세요.');
             return;
         }
 
-        setMsg('신청 완료! 관리자 승인을 기다려주세요.');
+        const studentId = document.getElementById('studentId').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+
+        if (!studentId || !name || !phone) {
+            alert('학번/이름/전화번호를 모두 입력하세요.');
+            return;
+        }
+
+        const r = await fetch('/api/public/apply', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ studentId, name, phone, lockerNumber: selectedLocker })
+        });
+
+        if (!r.ok) {
+            const t = await r.text();
+            alert('신청 실패: ' + t);
+            return;
+        }
+
+        // ✅ 확인코드 표시
+        const data = await r.json();
+        const code = data?.lookupCode;
+
+        alert(
+            `신청이 접수되었습니다.\n\n` +
+            `✅ 나의 사물함 조회 확인코드: ${code}\n` +
+            `(이 코드는 조회/메모/비우기에 필요합니다. 꼭 저장해 주세요!)`
+        );
+
         await loadGrid();
     }
 
-    async function loadMyStatus(){
-        const studentId = document.getElementById('studentId').value.trim();
-        if (!studentId) {
-            alert('학번을 입력하세요.');
+    // ---------- 모달 로직 ----------
+    const modal = document.getElementById("studentIdModal");
+    const modalInput = document.getElementById("studentIdModalInput");
+    const modalCode = document.getElementById("studentIdModalCode");
+    const modalErr = document.getElementById("studentIdModalError");
+    const btnOk = document.getElementById("studentIdModalOk");
+    const btnCancel = document.getElementById("studentIdModalCancel");
+    const btnClose = document.getElementById("studentIdModalClose");
+
+    function openModal(){
+        modal.classList.add("show");
+        modal.setAttribute("aria-hidden", "false");
+        modalErr.style.display = "none";
+        modalErr.textContent = "";
+        modalInput.value = "";
+        modalCode.value = "";
+        setTimeout(() => modalInput.focus(), 0);
+    }
+
+    function closeModal(){
+        modal.classList.remove("show");
+        modal.setAttribute("aria-hidden", "true");
+    }
+
+    function showError(msg){
+        modalErr.textContent = msg;
+        modalErr.style.display = "block";
+    }
+
+    async function submitLookup(){
+        const studentId = (modalInput.value || "").trim();
+        const code = (modalCode.value || "").trim();
+
+        if (!studentId) return showError("학번을 입력해야 조회할 수 있어요.");
+        if (!/^\d+$/.test(studentId)) return showError("학번은 숫자만 입력해주세요.");
+        if (!code) return showError("확인코드를 입력해야 조회할 수 있어요.");
+        if (!/^\d{6}$/.test(code)) return showError("확인코드는 6자리 숫자입니다.");
+
+        // UI 상태
+        setMyStatus("조회 중...");
+        modalErr.style.display = "none";
+        modalErr.textContent = "";
+
+        const r = await fetch(
+            "/api/public/my-status?studentId=" + encodeURIComponent(studentId) +
+            "&code=" + encodeURIComponent(code)
+        );
+
+        // ✅ 무조건 text로 먼저 받기 (서버가 400일 때 text로 내려줌)
+        const raw = await r.text();
+
+        // ✅ 실패면: 모달 에러로 표시 + "조회 중..." 제거
+        if (!r.ok) {
+            showError(raw || "학번 또는 확인코드가 올바르지 않습니다.");
+            setMyStatus("");
             return;
         }
 
-        setMyStatus('조회 중...');
-
-        const r = await fetch('/api/public/my-status?studentId=' + encodeURIComponent(studentId));
-
+        // ✅ 성공이면: JSON 파싱해서 처리
         let data;
         try {
-            data = await r.json();
+            data = JSON.parse(raw);
         } catch (e) {
-            const t = await r.text();
-            setMyStatus('조회 실패: 서버 응답이 올바르지 않습니다.\n' + t);
+            showError("서버 응답 형식이 올바르지 않습니다.");
+            setMyStatus("");
             return;
         }
 
-        if (!r.ok) {
-            setMyStatus('조회 실패: ' + (data?.message || JSON.stringify(data)));
+        closeModal();
+
+        if (data.status === "APPROVED") {
+            window.location.href =
+                "/my-locker.html?studentId=" + encodeURIComponent(studentId) +
+                "&code=" + encodeURIComponent(code);
             return;
         }
 
-        if (data.status === 'NONE') {
-            setMyStatus(data.message);
+        if (data.status === "NONE") {
+            setMyStatus(data.message || "현재 사용 중인 사물함이 없습니다.");
         } else {
             setMyStatus(`${data.message} (사물함: ${data.lockerNumber}번 / 상태: ${data.status})`);
         }
     }
 
-    document.getElementById('applyBtn').addEventListener('click', apply);
-    document.getElementById('checkBtn').addEventListener('click', loadMyStatus);
 
-    (async function init(){
-        await loadGrid();
-    })();
+    document.getElementById('applyBtn').addEventListener('click', apply);
+    document.getElementById('myBtn').addEventListener('click', openModal);
+
+    btnCancel.addEventListener("click", closeModal);
+    btnClose.addEventListener("click", closeModal);
+    btnOk.addEventListener("click", submitLookup);
+
+    modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    modalInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") submitLookup();
+        if (e.key === "Escape") closeModal();
+    });
+    modalCode.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") submitLookup();
+        if (e.key === "Escape") closeModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+        if (!modal.classList.contains("show")) return;
+        if (e.key === "Escape") closeModal();
+    });
+
+    loadGrid();
 </script>
 </body>
 </html>

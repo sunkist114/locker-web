@@ -45,9 +45,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // ✅ 누구나 접근 가능 (여기가 먼저!)
                         .requestMatchers(
-                                "/", "/login.html", "/student.html", "/admin-password.html",
-                                "/api/public/**",
-                                "/css/**", "/js/**", "/images/**", "/favicon.ico"
+                                "/", "/student.html", "/my-locker.html",
+                                "/login.html", "/admin.html", "/admin-approved.html",
+                                "/css/**", "/js/**", "/images/**",
+                                "/api/public/**"          // ✅ public API는 모두 열기
                         ).permitAll()
 
                         // ✅ 관리자만

@@ -325,12 +325,12 @@
     });
 
     document.getElementById("lockerSummary").textContent =
-            `AVAILABLE: ${available} / PENDING: ${pending} / APPROVED: ${approved}\n` +
+            `신청 가능: ${available} / 승인 대기: ${pending} / 이용 중: ${approved}\n` +
             `빨간색 사물함을 클릭하면 사물함을 비울 수 있습니다.`;
   }
 
   async function loadGrid() {
-    const items = await api("/api/public/grid");
+    const items = await api("/api/public/lockers");
     renderGrid(items);
   }
 

@@ -5,7 +5,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/lockerdb}
     username: ${SPRING_DATASOURCE_USERNAME:locker}
-    password: ${SPRING_DATASOURCE_PASSWORD:}
+    password: ${SPRING_DATASOURCE_PASSWORD:lockerpass}
   jpa:
     hibernate:
       ddl-auto: update
