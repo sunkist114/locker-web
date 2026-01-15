@@ -106,8 +106,8 @@ cp src/main/resources/application-example.yml src/main/resources/application.yml
 DB 계정 정보는 application.yml에 직접 설정하세요.
 
 ### 3️⃣ 실행
-```./gradlew bootRun
-
+```bash
+./gradlew bootRun
 ```
 
 ### 4️⃣ 접속
