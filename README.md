@@ -85,7 +85,7 @@ src/main/resources
  │   ├─ admin.html
  │   └─ admin-approved.html
  ├─ application.yml
- └─ application-example.yml
+ └─ application-example.yml```
 
 
 ---
@@ -95,7 +95,7 @@ src/main/resources
 ### 1️⃣ 저장소 클론
 ```bash
 git clone https://github.com/sunkist114/locker-web.git
-cd locker-web
+cd locker-web```
 
 ### 2️⃣ 설정 파일 준비
 cp src/main/resources/application-example.yml src/main/resources/application.yml
@@ -104,7 +104,7 @@ cp src/main/resources/application-example.yml src/main/resources/application.yml
 DB 계정 정보는 application.yml에 직접 설정하세요.
 
 ### 3️⃣ 실행
-./gradlew bootRun
+```./gradlew bootRun```
 
 ### 4️⃣ 접속
 - 학생 페이지: http://localhost:8080/student.html
@@ -119,5 +119,5 @@ DB 계정 정보는 application.yml에 직접 설정하세요.
 Docker 기반 배포
 
 ## 👤 제작자
-- 유민 (sunkist114)
+- 강민선 (sunkist114)
 - Computer Engineering / Spring Boot 기반 웹 프로젝트
