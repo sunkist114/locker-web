@@ -6,23 +6,24 @@ import jakarta.persistence.*;
 @Table(name = "lockers")
 public class Locker {
 
+    public enum State { AVAILABLE, RESERVED, APPROVED }
+
     @Id
-    private Integer lockerNumber; // 1..50
+    private Integer lockerNumber; // 1..50 (사물함 번호가 PK)
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private State state;
 
     @Column
-    private String reservedStudentId;
+    private String reservedStudentId; // 예약한 학생 학번(없으면 null)
 
-    public enum State { AVAILABLE, RESERVED, APPROVED }
+    protected Locker() {
+        // JPA 기본 생성자(필수)
+    }
 
-    // JPA 기본 생성자(필수)
-    protected Locker() {}
-
-    // ✅ 이 생성자가 있어야 new Locker(i)가 됨
     public Locker(Integer lockerNumber) {
+        // 새 사물함 엔티티 생성 시 기본값 세팅
         this.lockerNumber = lockerNumber;
         this.state = State.AVAILABLE;
         this.reservedStudentId = null;

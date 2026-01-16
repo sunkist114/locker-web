@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <title>컴퓨터공학과 사물함 신청</title>
+
     <style>
         :root{
             --bg:#f5f6f8;
@@ -19,7 +20,9 @@
             --bad:#ef4444;
             --radius:14px;
         }
+
         *{ box-sizing:border-box; }
+
         body{
             margin:0;
             font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
@@ -42,6 +45,7 @@
             font-weight:800;
             margin-bottom:14px;
         }
+
         .topNote{
             color:var(--muted);
             font-size:12px;
@@ -54,6 +58,7 @@
             grid-template-columns: 1.2fr 0.8fr;
             gap:14px;
         }
+
         @media (max-width:960px){
             .grid{ grid-template-columns:1fr; }
         }
@@ -63,40 +68,67 @@
             font-size:16px;
         }
 
+        /* ===== Legend ===== */
         .legend{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
         .chip{ display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
         .dot{ width:10px; height:10px; border-radius:50%; }
         .dot.good{ background: rgba(34,197,94,0.6); }
         .dot.warn{ background: rgba(251,191,36,0.8); }
-        .dot.bad{ background: rgba(239,68,68,0.75); }
+        .dot.bad { background: rgba(239,68,68,0.75); }
 
-        /* ✅ 관리자 페이지와 동일한 스타일 */
-        .locker-grid {
-            display: grid;
+        /* ===== Locker Grid (관리자 페이지와 동일 스타일) ===== */
+        .locker-grid{
+            display:grid;
             grid-template-columns: repeat(10, 1fr);
-            gap: 8px;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: #fafafa;
-            overflow-x: auto;
+            gap:8px;
+            padding:10px;
+            border:1px solid var(--border);
+            border-radius:12px;
+            background:#fafafa;
+            overflow-x:auto;
         }
 
-        .locker {
-            border-radius: 10px;
-            padding: 10px 0;
-            text-align: center;
-            font-weight: 800;
-            font-size: 13px;
-            border: 1px solid transparent;
-            user-select: none;
+        .locker{
+            border-radius:10px;
+            padding:10px 0;
+            text-align:center;
+            font-weight:800;
+            font-size:13px;
+            border:1px solid transparent;
+            user-select:none;
+            color: var(--text) !important;
+            transform: none !important;
         }
 
-        /* 상태 색상도 관리자 페이지와 동일 */
-        .locker.available { background: rgba(34,197,94,0.25); border-color: rgba(34,197,94,0.25); }
-        .locker.pending   { background: rgba(251,191,36,0.35); border-color: rgba(251,191,36,0.35); }
-        .locker.approved  { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.25); }
+        /* 선택된 사물함: 강조를 '안쪽'으로 (주변 레이아웃/시각 영향 최소화) */
+        .locker.selected{
+            border-color: rgba(92, 124, 112, 0.55) !important;
 
+            /* 기존 box-shadow 제거 */
+            box-shadow: none !important;
+
+            /* outline을 안쪽으로 당겨서 그리기 */
+            outline: 2px solid rgba(92, 124, 112, 0.35);
+            outline-offset: -2px;
+
+            transform: none !important;
+            filter: none !important;
+        }
+
+
+        /* 선택된 사물함 hover도 과하지 않게 */
+        .locker.available:hover{
+            filter: brightness(0.99);
+        }
+
+        /* 선택된 상태에서는 hover도 변화 최소화 */
+        .locker.selected:hover{
+            filter: none;
+        }
+
+        .locker.available{ background: rgba(34,197,94,0.25); border-color: rgba(34,197,94,0.25); }
+        .locker.pending  { background: rgba(251,191,36,0.35); border-color: rgba(251,191,36,0.35); }
+        .locker.approved { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.25); }
 
         .toast{
             margin-top:10px;
@@ -106,14 +138,16 @@
             white-space:pre-line;
         }
 
-        .hint{
+        /* ===== Form ===== */
+        .selected{
+            margin-top:4px;
+            font-size:13px;
             color:var(--muted);
-            font-size:12px;
-            margin-bottom:12px;
-            line-height:1.4;
         }
+
         .formRow{ display:grid; gap:10px; margin-top:10px; }
         label{ font-size:12px; color:var(--muted); font-weight:800; }
+
         input{
             width:100%;
             padding:12px 12px;
@@ -143,11 +177,6 @@
             border-color:var(--btn);
         }
 
-        .selected{
-            margin-top:4px;
-            font-size:13px;
-            color:var(--muted);
-        }
         .myBox{
             margin-top:12px;
             font-size:13px;
@@ -156,125 +185,106 @@
         }
         #myStatusBox{ display:none; }
 
-        /* ✅ Modal */
+        /* ===== Modal (나의 사물함 조회) ===== */
         .modal-overlay{
-            position: fixed;
-            inset: 0;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,.35);
-            padding: 16px;
-            z-index: 9999;
+            position:fixed;
+            inset:0;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            background:rgba(0,0,0,.35);
+            padding:16px;
+            z-index:9999;
         }
-        .modal-overlay.show{ display: flex; }
+        .modal-overlay.show{ display:flex; }
 
         .modal-card{
-            width: min(420px, 100%);
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
+            width:min(420px, 100%);
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:var(--radius);
             box-shadow:0 18px 50px rgba(0,0,0,.18);
-            overflow: hidden;
+            overflow:hidden;
         }
+
         .modal-header{
             display:flex;
             align-items:center;
             justify-content:space-between;
-            padding: 14px 16px;
-            border-bottom: 1px solid var(--border);
+            padding:14px 16px;
+            border-bottom:1px solid var(--border);
         }
-        .modal-title{ margin:0; font-size: 16px; }
+
+        .modal-title{ margin:0; font-size:16px; }
+
         .modal-close{
-            border: none;
-            background: transparent;
-            font-size: 22px;
-            line-height: 1;
-            cursor: pointer;
-            color: var(--muted);
+            border:none;
+            background:transparent;
+            font-size:22px;
+            line-height:1;
+            cursor:pointer;
+            color:var(--muted);
         }
-        .modal-body{ padding: 14px 16px; }
+
+        .modal-body{
+            padding:10px 16px !important; /* 입력 간격 축소 */
+        }
+
         .modal-desc{
-            margin: 0 0 12px 0;
-            color: var(--muted);
-            font-size: 13px;
+            margin:0 0 6px 0 !important; /* 문구 간격 축소 */
+            color:var(--muted);
+            font-size:13px;
         }
+
         .modal-label{
             display:block;
-            font-size: 13px;
-            margin: 2px 0 1px;
-            color: var(--muted);
-            font-weight: 800;
+            font-size:13px;
+            margin:0 !important;
+            padding:0 !important;
+            color:var(--muted);
+            font-weight:800;
         }
+
         .modal-input{
             width:100%;
-            padding: 8px 10px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            outline: none;
+            padding:8px 10px !important;
+            border:1px solid var(--border);
+            border-radius:10px;
+            outline:none;
+            margin:0 0 6px 0 !important;
         }
         .modal-input:focus{
-            border-color: #cbd5e1;
-            box-shadow: 0 0 0 3px rgba(15, 23, 42, .08);
+            border-color:#cbd5e1;
+            box-shadow:0 0 0 3px rgba(15, 23, 42, .08);
         }
+        .modal-input:last-of-type{ margin-bottom:0 !important; }
+
         .modal-error{
-            margin: 10px 0 0 0;
-            color: #ef4444;
-            font-size: 12px;
+            margin:10px 0 0 0;
+            color:#ef4444;
+            font-size:12px;
         }
+
         .modal-actions{
             display:flex;
-            gap: 8px;
-            padding: 14px 16px;
-            border-top: 1px solid var(--border);
+            gap:8px;
+            padding:10px 16px !important; /* 버튼 영역도 살짝 축소 */
+            border-top:1px solid var(--border);
             justify-content:flex-end;
         }
+
         .modal-btn{
-            padding: 10px 14px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            font-weight: 700;
+            padding:10px 14px;
+            border-radius:10px;
+            border:1px solid var(--border);
+            cursor:pointer;
+            font-weight:700;
         }
         .modal-btn.ghost{ background:#fff; }
         .modal-btn.primary{
-            background: var(--btn);
-            color: var(--btnText);
-            border-color: var(--btn);
-        }
-
-        /* ===== 모달 입력 간격 강제 축소 ===== */
-
-        /* 모달 전체 위아래 패딩 줄이기 */
-        .modal-body{
-            padding: 10px 16px !important;
-        }
-
-        /* 설명 문구 아래 여백 줄이기 */
-        .modal-desc{
-            margin: 0 0 6px 0 !important;
-        }
-
-        /* label 기본 margin 완전 제거 */
-        .modal-label{
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        /* input 아래쪽 여백을 직접 제어 */
-        .modal-input{
-            margin: 0 0 6px 0 !important;
-            padding: 8px 10px !important;
-        }
-
-        /* 마지막 input은 여백 제거 */
-        .modal-input:last-of-type{
-            margin-bottom: 0 !important;
-        }
-
-        /* 버튼 영역 패딩도 살짝 줄이기 */
-        .modal-actions{
-            padding: 10px 16px !important;
+            background:var(--btn);
+            color:var(--btnText);
+            border-color:var(--btn);
         }
 
     </style>
@@ -282,7 +292,9 @@
 
 <body>
 
-<!-- ✅ 나의 사물함 조회 모달 -->
+<!-- =========================
+     Modal: 나의 사물함 조회
+     ========================= -->
 <div id="studentIdModal" class="modal-overlay" aria-hidden="true">
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="studentIdModalTitle">
         <div class="modal-header">
@@ -294,12 +306,24 @@
             <p class="modal-desc">확인코드 분실 시 관리자에게 문의 바랍니다.</p>
 
             <label class="modal-label" for="studentIdModalInput">학번</label>
-            <input id="studentIdModalInput" class="modal-input" type="text" inputmode="numeric"
-                   placeholder="20244000" autocomplete="off"/>
+            <input
+                    id="studentIdModalInput"
+                    class="modal-input"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="20244000"
+                    autocomplete="off"
+            />
 
             <label class="modal-label" for="studentIdModalCode">확인코드</label>
-            <input id="studentIdModalCode" class="modal-input" type="text" inputmode="numeric"
-                   placeholder="6자리 확인코드" autocomplete="off"/>
+            <input
+                    id="studentIdModalCode"
+                    class="modal-input"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="6자리 확인코드"
+                    autocomplete="off"
+            />
 
             <p id="studentIdModalError" class="modal-error" style="display:none;"></p>
         </div>
@@ -311,13 +335,18 @@
     </div>
 </div>
 
+<!-- =========================
+     Main
+     ========================= -->
 <div class="wrap">
     <div class="page-title">사물함 신청</div>
     <div class="topNote">원하는 사물함을 클릭 후, 학생 본인 정보를 입력해주세요.</div>
 
     <div class="grid">
+        <!-- Locker Grid -->
         <div class="card">
             <h2>현재 사물함 현황</h2>
+
             <div class="legend">
                 <div class="chip"><span class="dot good"></span>AVAILABLE</div>
                 <div class="chip"><span class="dot warn"></span>PENDING</div>
@@ -328,21 +357,22 @@
             <div class="toast" id="lockerSummary">로딩 중...</div>
         </div>
 
+        <!-- Apply Form -->
         <div class="card">
             <h2>신청 정보</h2>
             <div class="selected" id="selectedText">선택 사물함: 없음</div>
 
             <div class="formRow">
                 <div>
-                    <label>학번</label>
+                    <label for="studentId">학번</label>
                     <input id="studentId" placeholder="20244000" />
                 </div>
                 <div>
-                    <label>이름</label>
+                    <label for="name">이름</label>
                     <input id="name" placeholder="강민선" />
                 </div>
                 <div>
-                    <label>전화번호</label>
+                    <label for="phone">전화번호</label>
                     <input id="phone" placeholder="01012345678" />
                 </div>
             </div>
@@ -356,110 +386,133 @@
 </div>
 
 <script>
+    // =========================
+    // State
+    // =========================
     let selectedLocker = null;
 
-    function setMyStatus(msg){
-        const box = document.getElementById('myStatusBox');
-        const text = (msg ?? '').toString().trim();
+    // "나의 사물함 조회" 결과 메시지 영역 표시/숨김
+    function setMyStatus(msg) {
+        const box = document.getElementById("myStatusBox");
+        const text = (msg ?? "").toString().trim();
+
         if (!text) {
-            box.textContent = '';
-            box.style.display = 'none';
+            box.textContent = "";
+            box.style.display = "none";
             return;
         }
+
         box.textContent = text;
-        box.style.display = 'block';
+        box.style.display = "block";
     }
 
-    function buildDisplayOrder(rows=5, cols=10){
+    // ✅ 사물함 번호 표시 순서: "열 기준(1,6,11...)" (5행 x 10열)
+    function buildDisplayOrder(rows = 5, cols = 10) {
         const order = [];
-        for (let r = 1; r <= rows; r++){
-            for (let c = 1; c <= cols; c++){
+        for (let r = 1; r <= rows; r++) {
+            for (let c = 1; c <= cols; c++) {
                 order.push(r + rows * (c - 1));
             }
         }
         return order;
     }
 
-    function renderGrid(items){
-        const grid = document.getElementById('lockerGrid');
-        grid.innerHTML = '';
+    // =========================
+    // Locker Grid Render
+    // =========================
+    function renderGrid(items) {
+        const grid = document.getElementById("lockerGrid");
+        grid.innerHTML = "";
 
+        // lockerNumber -> item 매핑
         const map = new Map();
-        (items || []).forEach(x => map.set(Number(x.lockerNumber), x));
+        (items || []).forEach((x) => map.set(Number(x.lockerNumber), x));
 
-        let available=0, pending=0, approved=0;
+        let available = 0, pending = 0, approved = 0;
         const order = buildDisplayOrder(5, 10);
 
-        order.forEach(num => {
+        order.forEach((num) => {
             const it = map.get(num);
-            const state = (it?.state || 'AVAILABLE').toUpperCase();
+            const state = (it?.state || "AVAILABLE").toUpperCase();
 
-            const div = document.createElement('div');
+            const div = document.createElement("div");
             const cls =
-                (state === 'APPROVED') ? 'approved' :
-                    (state === 'PENDING' || state === 'RESERVED') ? 'pending' :
-                        'available';
+                (state === "APPROVED") ? "approved" :
+                    (state === "PENDING" || state === "RESERVED") ? "pending" :
+                        "available";
 
-            div.className = 'locker ' + cls;
+            div.className = "locker " + cls;
             div.textContent = num;
 
-            div.style.cursor = (cls === 'available') ? 'pointer' : 'default';
-            div.title = (cls === 'available') ? '클릭해서 선택' : '선택 불가';
+            // 학생 페이지: AVAILABLE만 선택 가능
+            div.style.cursor = (cls === "available") ? "pointer" : "default";
+            div.title = (cls === "available") ? "클릭해서 선택" : "선택 불가";
 
-            if (cls === 'available') available++;
-            else if (cls === 'pending') pending++;
+            if (cls === "available") available++;
+            else if (cls === "pending") pending++;
             else approved++;
 
-            div.addEventListener('click', () => {
-                if (cls !== 'available') {
-                    alert('이 사물함은 선택할 수 없습니다.');
+            div.addEventListener("click", () => {
+                if (cls !== "available") {
+                    alert("이 사물함은 선택할 수 없습니다.");
                     return;
                 }
+
+                // 이전 선택 표시 제거
+                document.querySelectorAll(".locker.selected").forEach(el => el.classList.remove("selected"));
+
+                // 현재 선택 표시
+                div.classList.add("selected");
+
                 selectedLocker = num;
+
                 document.getElementById('selectedText').textContent = '선택 사물함: ' + selectedLocker + '번';
             });
 
             grid.appendChild(div);
         });
 
-        document.getElementById('lockerSummary').textContent =
+        document.getElementById("lockerSummary").textContent =
             `신청 가능: ${available} / 승인 대기: ${pending} / 이용 중: ${approved}`;
     }
 
-    async function loadGrid(){
-        const res = await fetch('/api/public/lockers');
+    async function loadGrid() {
+        const res = await fetch("/api/public/lockers");
         const data = await res.json();
         renderGrid(data);
     }
 
-    async function apply(){
+    // =========================
+    // Apply
+    // =========================
+    async function apply() {
         if (!selectedLocker) {
-            alert('사물함을 먼저 선택하세요.');
+            alert("사물함을 먼저 선택하세요.");
             return;
         }
 
-        const studentId = document.getElementById('studentId').value.trim();
-        const name = document.getElementById('name').value.trim();
-        const phone = document.getElementById('phone').value.trim();
+        const studentId = document.getElementById("studentId").value.trim();
+        const name = document.getElementById("name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
 
         if (!studentId || !name || !phone) {
-            alert('학번/이름/전화번호를 모두 입력하세요.');
+            alert("학번/이름/전화번호를 모두 입력하세요.");
             return;
         }
 
-        const r = await fetch('/api/public/apply', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
+        const r = await fetch("/api/public/apply", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ studentId, name, phone, lockerNumber: selectedLocker })
         });
 
         if (!r.ok) {
             const t = await r.text();
-            alert('신청 실패: ' + t);
+            alert("신청 실패: " + t);
             return;
         }
 
-        // ✅ 확인코드 표시
+        // ✅ 신청 성공 -> 확인코드 안내
         const data = await r.json();
         const code = data?.lookupCode;
 
@@ -472,41 +525,49 @@
         await loadGrid();
     }
 
-    // ---------- 모달 로직 ----------
-    const modal = document.getElementById("studentIdModal");
+    // =========================
+    // Modal: Lookup (나의 사물함 조회)
+    // =========================
+    const modal      = document.getElementById("studentIdModal");
     const modalInput = document.getElementById("studentIdModalInput");
-    const modalCode = document.getElementById("studentIdModalCode");
-    const modalErr = document.getElementById("studentIdModalError");
-    const btnOk = document.getElementById("studentIdModalOk");
-    const btnCancel = document.getElementById("studentIdModalCancel");
-    const btnClose = document.getElementById("studentIdModalClose");
+    const modalCode  = document.getElementById("studentIdModalCode");
+    const modalErr   = document.getElementById("studentIdModalError");
 
-    function openModal(){
+    const btnOk     = document.getElementById("studentIdModalOk");
+    const btnCancel = document.getElementById("studentIdModalCancel");
+    const btnClose  = document.getElementById("studentIdModalClose");
+
+    function openModal() {
         modal.classList.add("show");
         modal.setAttribute("aria-hidden", "false");
+
         modalErr.style.display = "none";
         modalErr.textContent = "";
+
         modalInput.value = "";
         modalCode.value = "";
+
         setTimeout(() => modalInput.focus(), 0);
     }
 
-    function closeModal(){
+    function closeModal() {
         modal.classList.remove("show");
         modal.setAttribute("aria-hidden", "true");
     }
 
-    function showError(msg){
+    function showError(msg) {
         modalErr.textContent = msg;
         modalErr.style.display = "block";
     }
 
-    async function submitLookup(){
+    async function submitLookup() {
         const studentId = (modalInput.value || "").trim();
         const code = (modalCode.value || "").trim();
 
+        // 클라이언트 입력 검증
         if (!studentId) return showError("학번을 입력해야 조회할 수 있어요.");
         if (!/^\d+$/.test(studentId)) return showError("학번은 숫자만 입력해주세요.");
+
         if (!code) return showError("확인코드를 입력해야 조회할 수 있어요.");
         if (!/^\d{6}$/.test(code)) return showError("확인코드는 6자리 숫자입니다.");
 
@@ -515,22 +576,20 @@
         modalErr.style.display = "none";
         modalErr.textContent = "";
 
+        // 서버가 400 등 에러일 땐 text로 내려주는 경우가 있어서 text로 먼저 받음
         const r = await fetch(
             "/api/public/my-status?studentId=" + encodeURIComponent(studentId) +
             "&code=" + encodeURIComponent(code)
         );
 
-        // ✅ 무조건 text로 먼저 받기 (서버가 400일 때 text로 내려줌)
         const raw = await r.text();
 
-        // ✅ 실패면: 모달 에러로 표시 + "조회 중..." 제거
         if (!r.ok) {
             showError(raw || "학번 또는 확인코드가 올바르지 않습니다.");
             setMyStatus("");
             return;
         }
 
-        // ✅ 성공이면: JSON 파싱해서 처리
         let data;
         try {
             data = JSON.parse(raw);
@@ -542,6 +601,7 @@
 
         closeModal();
 
+        // 승인 상태면 내 사물함 페이지로 이동
         if (data.status === "APPROVED") {
             window.location.href =
                 "/my-locker.html?studentId=" + encodeURIComponent(studentId) +
@@ -549,6 +609,7 @@
             return;
         }
 
+        // 승인 전/없음
         if (data.status === "NONE") {
             setMyStatus(data.message || "현재 사용 중인 사물함이 없습니다.");
         } else {
@@ -556,18 +617,22 @@
         }
     }
 
-
-    document.getElementById('applyBtn').addEventListener('click', apply);
-    document.getElementById('myBtn').addEventListener('click', openModal);
+    // =========================
+    // Event bindings
+    // =========================
+    document.getElementById("applyBtn").addEventListener("click", apply);
+    document.getElementById("myBtn").addEventListener("click", openModal);
 
     btnCancel.addEventListener("click", closeModal);
     btnClose.addEventListener("click", closeModal);
     btnOk.addEventListener("click", submitLookup);
 
+    // 모달 바깥 클릭 시 닫기
     modal.addEventListener("click", (e) => {
         if (e.target === modal) closeModal();
     });
 
+    // Enter/Escape 처리
     modalInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") submitLookup();
         if (e.key === "Escape") closeModal();
@@ -582,6 +647,7 @@
         if (e.key === "Escape") closeModal();
     });
 
+    // 초기 로딩
     loadGrid();
 </script>
 </body>

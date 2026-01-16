@@ -19,8 +19,13 @@ public class ApiController {
         this.sse = sse;
     }
 
+    // -----------------------
+    // Public
+    // -----------------------
+
     @GetMapping("/api/public/lockers")
     public List<LockerService.LockerDto> lockers() {
+        // 사물함 전체 상태 조회
         return service.getLockerGrid();
     }
 
@@ -29,14 +34,23 @@ public class ApiController {
 
     @PostMapping("/api/public/apply")
     public ResponseEntity<?> apply(@RequestBody ApplyReq req) {
-        String code = service.apply(req.studentId().trim(), req.name().trim(), req.phone().trim(), req.lockerNumber());
+        // 사물함 신청 + 확인코드 발급
+        String code = service.apply(
+                req.studentId().trim(),
+                req.name().trim(),
+                req.phone().trim(),
+                req.lockerNumber()
+        );
         sse.broadcast("changed");
         return ResponseEntity.ok(new ApplyRes(code));
     }
 
-    // ✅ code 필수
     @GetMapping("/api/public/my-status")
-    public LockerService.MyStatusDto myStatus(@RequestParam String studentId, @RequestParam String code) {
+    public LockerService.MyStatusDto myStatus(
+            @RequestParam String studentId,
+            @RequestParam String code
+    ) {
+        // 학번 + 확인코드로 현재 상태 조회
         return service.getMyStatus(studentId.trim(), code.trim());
     }
 
@@ -46,11 +60,13 @@ public class ApiController {
 
     @GetMapping("/api/admin/pending")
     public List<LockerService.PendingDto> pending() {
+        // 대기(PENDING) 신청 목록 조회
         return service.getPendingList();
     }
 
     @PostMapping("/api/admin/approve/{applicationId}")
     public ResponseEntity<?> approve(@PathVariable long applicationId) {
+        // 신청 승인
         service.approve(applicationId);
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
@@ -58,6 +74,7 @@ public class ApiController {
 
     @PostMapping("/api/admin/reject/{applicationId}")
     public ResponseEntity<?> reject(@PathVariable long applicationId) {
+        // 신청 반려
         service.reject(applicationId);
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
@@ -65,6 +82,7 @@ public class ApiController {
 
     @PostMapping("/api/admin/clear/{lockerNumber}")
     public ResponseEntity<?> clear(@PathVariable int lockerNumber) {
+        // 승인된 사물함 비우기
         service.clearApprovedLocker(lockerNumber);
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
@@ -72,25 +90,41 @@ public class ApiController {
 
     @PostMapping("/api/admin/reset")
     public ResponseEntity<?> reset() {
+        // 전체 초기화
         service.resetAll();
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
     }
 
-    // ✅ 관리자: 빈 사물함에 사용자 직접 지정 (즉시 APPROVED) + 확인코드 자동 생성
     public record AdminAssignReq(String studentId, String name, String phone) {}
     public record AdminAssignRes(String lookupCode) {}
 
     @PostMapping("/api/admin/assign/{lockerNumber}")
-    public ResponseEntity<?> adminAssign(@PathVariable int lockerNumber, @RequestBody AdminAssignReq req) {
-        String code = service.adminAssignApproved(req.studentId().trim(), req.name().trim(), req.phone().trim(), lockerNumber);
+    public ResponseEntity<?> adminAssign(
+            @PathVariable int lockerNumber,
+            @RequestBody AdminAssignReq req
+    ) {
+        // 관리자 직접 지정 후 즉시 승인
+        String code = service.adminAssignApproved(
+                req.studentId().trim(),
+                req.name().trim(),
+                req.phone().trim(),
+                lockerNumber
+        );
         sse.broadcast("changed");
         return ResponseEntity.ok(new AdminAssignRes(code));
     }
 
-    // ===== Public: My Locker Page =====
+    // -----------------------
+    // Public: My Locker
+    // -----------------------
+
     @GetMapping("/api/public/my-locker")
-    public LockerService.MyLockerDto myLocker(@RequestParam String studentId, @RequestParam String code) {
+    public LockerService.MyLockerDto myLocker(
+            @RequestParam String studentId,
+            @RequestParam String code
+    ) {
+        // 내 사물함 정보 조회
         return service.getMyLocker(studentId.trim(), code.trim());
     }
 
@@ -98,7 +132,12 @@ public class ApiController {
 
     @PostMapping("/api/public/my-locker/memo")
     public ResponseEntity<?> saveMemo(@RequestBody SaveMemoReq req) {
-        service.saveMyMemo(req.studentId().trim(), req.code().trim(), req.memo());
+        // 사물함 메모 저장
+        service.saveMyMemo(
+                req.studentId().trim(),
+                req.code().trim(),
+                req.memo()
+        );
         return ResponseEntity.ok().build();
     }
 
@@ -106,9 +145,9 @@ public class ApiController {
 
     @PostMapping("/api/public/my-locker/empty")
     public ResponseEntity<?> empty(@RequestBody EmptyReq req) {
+        // 사물함 반납
         service.emptyMyLocker(req.studentId().trim(), req.code().trim());
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
     }
-
 }

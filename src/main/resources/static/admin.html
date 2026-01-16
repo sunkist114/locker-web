@@ -19,29 +19,39 @@
       --bad: #ef4444;
       --radius: 14px;
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
     }
+
     .wrap {
       max-width: 1100px;
       margin: 28px auto;
       padding: 0 16px;
     }
+
     .topbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 14px;
     }
+
     .title {
       font-size: 20px;
       font-weight: 800;
     }
-    .top-actions { display: flex; gap: 8px; }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+
     .btn {
       border: 1px solid var(--border);
       background: var(--card);
@@ -52,21 +62,25 @@
       font-weight: 700;
       font-size: 13px;
     }
+
     .btn.primary {
       background: var(--btn);
       color: var(--btnText);
       border-color: var(--btn);
     }
+
     .btn.danger {
       background: var(--bad);
       color: white;
       border-color: var(--bad);
     }
+
     .grid {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
       gap: 14px;
     }
+
     @media (max-width: 960px) {
       .grid { grid-template-columns: 1fr; }
       .top-actions { flex-wrap: wrap; justify-content: flex-end; }
@@ -79,10 +93,12 @@
       padding: 16px;
       box-shadow: 0 6px 16px rgba(0,0,0,0.04);
     }
+
     .card h2 {
       margin: 0 0 8px;
       font-size: 16px;
     }
+
     .hint {
       color: var(--muted);
       font-size: 12px;
@@ -91,33 +107,54 @@
     }
 
     /* Pending header row: title + buttons in one line */
-    .card-head{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       margin-bottom: 8px;
     }
-    .card-head h2{
-      margin:0;
-      font-size:16px;
+
+    .card-head h2 {
+      margin: 0;
+      font-size: 16px;
     }
-    .head-actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:nowrap;
+
+    .head-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: nowrap;
     }
-    @media (max-width: 420px){
-      .head-actions{ flex-wrap:wrap; }
+
+    @media (max-width: 420px) {
+      .head-actions { flex-wrap: wrap; }
     }
 
     /* Locker grid */
-    .legend { display:flex; gap:10px; flex-wrap: wrap; margin-bottom: 10px; }
-    .chip { display:flex; align-items:center; gap:6px; font-size:12px; color: var(--muted); }
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
     .dot.good { background: rgba(34,197,94,0.6); }
     .dot.warn { background: rgba(251,191,36,0.8); }
-    .dot.bad { background: rgba(239,68,68,0.75); }
+    .dot.bad  { background: rgba(239,68,68,0.75); }
 
     .locker-grid {
       display: grid;
@@ -129,6 +166,7 @@
       background: #fafafa;
       overflow-x: auto;
     }
+
     .locker {
       border-radius: 10px;
       padding: 10px 0;
@@ -138,9 +176,10 @@
       border: 1px solid transparent;
       user-select: none;
     }
+
     .locker.available { background: rgba(34,197,94,0.25); border-color: rgba(34,197,94,0.25); }
-    .locker.pending { background: rgba(251,191,36,0.35); border-color: rgba(251,191,36,0.35); }
-    .locker.approved { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.25); }
+    .locker.pending   { background: rgba(251,191,36,0.35); border-color: rgba(251,191,36,0.35); }
+    .locker.approved  { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.25); }
 
     /* Pending list */
     .table {
@@ -148,24 +187,38 @@
       border-collapse: collapse;
       margin-top: 6px;
     }
-    .table th, .table td {
+
+    .table th,
+    .table td {
       border-bottom: 1px solid var(--border);
       padding: 10px 8px;
       font-size: 13px;
       text-align: left;
       vertical-align: middle;
     }
-    .table th { color: var(--muted); font-weight: 800; font-size: 12px; }
-    .actions { display:flex; gap:6px; flex-wrap: wrap; }
+
+    .table th {
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
     .small {
       padding: 7px 10px;
       border-radius: 9px;
       font-size: 12px;
       font-weight: 800;
     }
+
     .small.approve { background: var(--good); color: #fff; border: 1px solid var(--good); }
-    .small.reject { background: #fff; color: var(--bad); border: 1px solid var(--bad); }
-    .small.clear { background: #fff; color: #111827; border: 1px solid var(--border); }
+    .small.reject  { background: #fff; color: var(--bad); border: 1px solid var(--bad); }
+    .small.clear   { background: #fff; color: #111827; border: 1px solid var(--border); }
 
     .toast {
       margin-top: 10px;
@@ -175,8 +228,8 @@
       white-space: pre-line;
     }
 
-    /* ===== Modal (Admin assign) ===== */
-    .modal-backdrop{
+    /* Modal */
+    .modal-backdrop {
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.35);
@@ -186,8 +239,10 @@
       padding: 16px;
       z-index: 9999;
     }
-    .modal-backdrop.hidden{ display:none; }
-    .modal{
+
+    .modal-backdrop.hidden { display: none; }
+
+    .modal {
       width: min(520px, 100%);
       background: var(--card);
       border: 1px solid var(--border);
@@ -195,28 +250,39 @@
       box-shadow: 0 20px 50px rgba(0,0,0,0.15);
       padding: 16px;
     }
-    .modal-title{
+
+    .modal-title {
       font-size: 15px;
       font-weight: 900;
       margin: 0 0 8px;
     }
-    .modal-body{
+
+    .modal-body {
       color: var(--text);
       font-size: 13px;
       line-height: 1.5;
       margin-bottom: 4px;
       white-space: pre-line;
     }
-    .modal-actions{
+
+    .modal-actions {
       display: flex;
       justify-content: flex-end;
       gap: 8px;
       flex-wrap: wrap;
     }
-    /* Assign modal inputs */
-    .form-row{ margin-bottom: 2px; }
-    .label{ display:block; font-size:12px; color: var(--muted); font-weight: 800; margin-bottom: 2px; }
-    .input{
+
+    .form-row { margin-bottom: 2px; }
+
+    .label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      margin-bottom: 2px;
+    }
+
+    .input {
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -225,19 +291,18 @@
       outline: none;
       background: #fff;
     }
-    .input:focus{ border-color: rgba(17,24,39,0.35); }
 
-    /* ==========================
-       ✅ 공백 확 줄이기(입력 모달 전용)
-       ========================== */
-    #assignFormBackdrop .modal{ padding: 12px !important; }
-    #assignFormBackdrop .modal-title{ margin: 0 0 6px !important; }
-    #assignFormBackdrop .modal-body{ margin-bottom: 6px !important; line-height: 1.2 !important; }
-    #assignFormBackdrop .form-row{ margin-bottom: 6px !important; }
-    #assignFormBackdrop .form-row:last-child{ margin-bottom: 0 !important; }
-    #assignFormBackdrop .label{ margin: 0 0 2px 0 !important; }
-    #assignFormBackdrop .input{ padding: 7px 10px !important; }
-    #assignFormBackdrop .modal-actions{ padding-top: 6px !important; }
+    .input:focus { border-color: rgba(17,24,39,0.35); }
+
+    /* Assign modal spacing tweak (assign form only) */
+    #assignFormBackdrop .modal { padding: 12px !important; }
+    #assignFormBackdrop .modal-title { margin: 0 0 6px !important; }
+    #assignFormBackdrop .modal-body { margin-bottom: 6px !important; line-height: 1.2 !important; }
+    #assignFormBackdrop .form-row { margin-bottom: 6px !important; }
+    #assignFormBackdrop .form-row:last-child { margin-bottom: 0 !important; }
+    #assignFormBackdrop .label { margin: 0 0 2px 0 !important; }
+    #assignFormBackdrop .input { padding: 7px 10px !important; }
+    #assignFormBackdrop .modal-actions { padding-top: 6px !important; }
   </style>
 </head>
 <body>
@@ -251,7 +316,6 @@
   </div>
 
   <div class="grid">
-    <!-- Locker status -->
     <div class="card">
       <h2>현재 사물함 현황</h2>
       <div class="legend">
@@ -259,12 +323,11 @@
         <div class="chip"><span class="dot warn"></span>PENDING</div>
         <div class="chip"><span class="dot bad"></span>APPROVED</div>
       </div>
-      <div id="lockerGrid" class="locker-grid"></div>
 
+      <div id="lockerGrid" class="locker-grid"></div>
       <div class="toast" id="lockerSummary"></div>
     </div>
 
-    <!-- Pending approvals -->
     <div class="card">
       <div class="card-head">
         <h2>신청 대기 목록</h2>
@@ -294,7 +357,7 @@
   </div>
 </div>
 
-<!-- ✅ Admin assign modals (1세트만 유지) -->
+<!-- Admin assign modals (1세트만 유지) -->
 <div id="assignConfirmBackdrop" class="modal-backdrop hidden" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-title">사용자 지정</div>
@@ -331,14 +394,15 @@
 </div>
 
 <script>
-  // ===== Navigation =====
+  // Navigation
   function goApproved() { location.href = "/admin-approved.html"; }
+
   function doLogout() {
     fetch("/logout", { method: "POST" })
             .finally(() => location.href = "/login.html");
   }
 
-  // ===== Helpers =====
+  // Fetch helper
   async function api(url, options) {
     const res = await fetch(url, options);
     if (!res.ok) {
@@ -354,22 +418,32 @@
     document.getElementById("msg").textContent = text || "";
   }
 
-  // ===== Admin Assign (AVAILABLE -> APPROVED) =====
+  // Admin Assign (AVAILABLE -> APPROVED)
   let _selectedLockerNo = null;
 
-  function _show(el) { el.classList.remove("hidden"); el.setAttribute("aria-hidden", "false"); }
-  function _hide(el) { el.classList.add("hidden"); el.setAttribute("aria-hidden", "true"); }
+  function _show(el) {
+    el.classList.remove("hidden");
+    el.setAttribute("aria-hidden", "false");
+  }
 
-  function openAssignConfirm(lockerNo){
+  function _hide(el) {
+    el.classList.add("hidden");
+    el.setAttribute("aria-hidden", "true");
+  }
+
+  function openAssignConfirm(lockerNo) {
     _selectedLockerNo = lockerNo;
-    document.getElementById("assignConfirmText").textContent = `${lockerNo}번 사물함에 사용자를 지정하시겠습니까?`;
+    document.getElementById("assignConfirmText").textContent =
+            `${lockerNo}번 사물함에 사용자를 지정하시겠습니까?`;
     _show(document.getElementById("assignConfirmBackdrop"));
   }
-  function closeAssignConfirm(){ _hide(document.getElementById("assignConfirmBackdrop")); }
 
-  function openAssignForm(){
-    const title = document.getElementById("assignFormTitle");
-    title.textContent = `사물함 사용자 정보 입력`;
+  function closeAssignConfirm() {
+    _hide(document.getElementById("assignConfirmBackdrop"));
+  }
+
+  function openAssignForm() {
+    document.getElementById("assignFormTitle").textContent = "사물함 사용자 정보 입력";
 
     document.getElementById("assignStudentId").value = "";
     document.getElementById("assignName").value = "";
@@ -378,71 +452,85 @@
     _show(document.getElementById("assignFormBackdrop"));
     document.getElementById("assignStudentId").focus();
   }
-  function closeAssignForm(){ _hide(document.getElementById("assignFormBackdrop")); }
 
-  // 버튼 바인딩
-  document.getElementById("assignConfirmNo").addEventListener("click", () => closeAssignConfirm());
-  document.getElementById("assignConfirmYes").addEventListener("click", () => {
-    closeAssignConfirm();
-    openAssignForm();
-  });
+  function closeAssignForm() {
+    _hide(document.getElementById("assignFormBackdrop"));
+  }
 
-  document.getElementById("assignCancel").addEventListener("click", () => closeAssignForm());
-  document.getElementById("assignSubmit").addEventListener("click", async () => {
-    const studentId = document.getElementById("assignStudentId").value.trim();
-    const name = document.getElementById("assignName").value.trim();
-    const phone = document.getElementById("assignPhone").value.trim();
+  // Modal button bindings
+  document.getElementById("assignConfirmNo")
+          .addEventListener("click", closeAssignConfirm);
 
-    if (!studentId || !name || !phone) {
-      alert("학번/이름/전화번호를 모두 입력해주세요.");
-      return;
-    }
+  document.getElementById("assignConfirmYes")
+          .addEventListener("click", () => {
+            closeAssignConfirm();
+            openAssignForm();
+          });
 
-    if (!_selectedLockerNo) {
-      alert("사물함 번호가 선택되지 않았습니다.");
-      return;
-    }
+  document.getElementById("assignCancel")
+          .addEventListener("click", closeAssignForm);
 
-    if (!confirm(`${_selectedLockerNo}번 사물함에\n학번: ${studentId}\n이름: ${name}\n전화: ${phone}\n\n이대로 지정할까요?`)) return;
+  document.getElementById("assignSubmit")
+          .addEventListener("click", async () => {
+            const studentId = document.getElementById("assignStudentId").value.trim();
+            const name = document.getElementById("assignName").value.trim();
+            const phone = document.getElementById("assignPhone").value.trim();
 
-    try {
-      const res = await api(`/api/admin/assign/${_selectedLockerNo}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentId, name, phone })
-      });
+            if (!studentId || !name || !phone) {
+              alert("학번/이름/전화번호를 모두 입력해주세요.");
+              return;
+            }
 
-      closeAssignForm();
-      setMsg(`${_selectedLockerNo}번 사용자 지정 완료`);
-      await refreshAll();
+            if (!_selectedLockerNo) {
+              alert("사물함 번호가 선택되지 않았습니다.");
+              return;
+            }
 
-      const code = (res && res.lookupCode) ? res.lookupCode : "";
-      alert(`지정이 완료되었습니다.\n\n사용자 조회 확인코드(토큰): ${code}\n\n※ 이 코드는 사용자에게 1회 전달하세요.`);
-    } catch (e) {
-      alert("지정 실패: " + (e?.message || e));
-    }
-  });
+            if (!confirm(
+                    `${_selectedLockerNo}번 사물함에\n학번: ${studentId}\n이름: ${name}\n전화: ${phone}\n\n이대로 지정할까요?`
+            )) return;
 
-  // 바깥 클릭 시 닫기
-  document.getElementById("assignConfirmBackdrop").addEventListener("click", (e) => {
-    if (e.target.id === "assignConfirmBackdrop") closeAssignConfirm();
-  });
-  document.getElementById("assignFormBackdrop").addEventListener("click", (e) => {
-    if (e.target.id === "assignFormBackdrop") closeAssignForm();
-  });
+            try {
+              const res = await api(`/api/admin/assign/${_selectedLockerNo}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ studentId, name, phone })
+              });
 
-  // ✅ "열 기준(1,6,11...)" 표시 순서 만들기 (5행 x 10열)
-  function buildDisplayOrder(rows=5, cols=10){
+              closeAssignForm();
+              setMsg(`${_selectedLockerNo}번 사용자 지정 완료`);
+              await refreshAll();
+
+              const code = (res && res.lookupCode) ? res.lookupCode : "";
+              alert(`지정이 완료되었습니다.\n\n사용자 조회 확인코드(토큰): ${code}\n\n이 코드는 사용자에게 1회 전달하세요.`);
+            } catch (e) {
+              alert("지정 실패: " + (e?.message || e));
+            }
+          });
+
+  // Click outside to close
+  document.getElementById("assignConfirmBackdrop")
+          .addEventListener("click", (e) => {
+            if (e.target.id === "assignConfirmBackdrop") closeAssignConfirm();
+          });
+
+  document.getElementById("assignFormBackdrop")
+          .addEventListener("click", (e) => {
+            if (e.target.id === "assignFormBackdrop") closeAssignForm();
+          });
+
+  // Display order: column-wise (1,6,11...) for 5 rows x 10 cols
+  function buildDisplayOrder(rows = 5, cols = 10) {
     const order = [];
-    for (let r = 1; r <= rows; r++){
-      for (let c = 1; c <= cols; c++){
+    for (let r = 1; r <= rows; r++) {
+      for (let c = 1; c <= cols; c++) {
         order.push(r + rows * (c - 1));
       }
     }
     return order;
   }
 
-  // ===== Locker Grid =====
+  // Locker Grid
   function renderGrid(items) {
     const grid = document.getElementById("lockerGrid");
     grid.innerHTML = "";
@@ -454,7 +542,7 @@
 
     const order = buildDisplayOrder(5, 10);
     order.forEach(num => {
-      const it = map.get(num) || { lockerNumber:num, state:"AVAILABLE", studentId:null };
+      const it = map.get(num) || { lockerNumber: num, state: "AVAILABLE", studentId: null };
 
       const div = document.createElement("div");
       const s = (it.state || it.status || "AVAILABLE").toUpperCase();
@@ -470,7 +558,7 @@
       else if (cls === "pending") pending++;
       else approved++;
 
-      // 승인된 사물함 클릭 -> 비우기
+      // Approved locker: click to clear
       if (s === "APPROVED") {
         div.style.cursor = "pointer";
         div.title = "클릭하면 사물함을 비웁니다.";
@@ -494,7 +582,7 @@
         });
       }
 
-      // ✅ 빈 사물함(AVAILABLE) 클릭 -> 사용자 지정
+      // Available locker: click to assign user
       if (s === "AVAILABLE") {
         div.style.cursor = "pointer";
         div.title = "클릭하면 사용자를 지정할 수 있습니다.";
@@ -514,30 +602,31 @@
     renderGrid(items);
   }
 
-  // ===== Pending list =====
+  // Pending list
   function renderPending(list) {
     const body = document.getElementById("pendingBody");
     body.innerHTML = "";
 
     if (!list || list.length === 0) {
-      body.innerHTML = `<tr><td colspan="5" style="color:var(--muted); padding:14px 8px;">대기 신청이 없습니다.</td></tr>`;
+      body.innerHTML =
+              `<tr><td colspan="5" style="color:var(--muted); padding:14px 8px;">대기 신청이 없습니다.</td></tr>`;
       return;
     }
 
     list.forEach(row => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-          <td>${row.lockerNumber}</td>
-          <td>${escapeHtml(row.studentId)}</td>
-          <td>${escapeHtml(row.name)}</td>
-          <td>${escapeHtml(row.phone)}</td>
-          <td>
-            <div class="actions">
-              <button class="btn small approve" data-id="${row.id}">승인</button>
-              <button class="btn small reject" data-id="${row.id}">거절</button>
-            </div>
-          </td>
-        `;
+        <td>${row.lockerNumber}</td>
+        <td>${escapeHtml(row.studentId)}</td>
+        <td>${escapeHtml(row.name)}</td>
+        <td>${escapeHtml(row.phone)}</td>
+        <td>
+          <div class="actions">
+            <button class="btn small approve" data-id="${row.id}">승인</button>
+            <button class="btn small reject" data-id="${row.id}">거절</button>
+          </div>
+        </td>
+      `;
       body.appendChild(tr);
     });
 
@@ -575,7 +664,7 @@
     renderPending(list);
   }
 
-  // ===== Admin actions =====
+  // Admin actions
   async function resetAll() {
     if (!confirm("모든 신청/승인을 초기화할까요?")) return;
     try {

@@ -32,20 +32,20 @@ public class Application {
     private Status status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    private Instant createdAt; // 생성 시각(최초 저장 시 자동 세팅)
 
-    // ✅ 사물함 메모(물건 기록)
     @Column(columnDefinition = "text")
-    private String memo;
+    private String memo; // 사물함 메모(물건 기록)
 
     @Column(name = "lookup_code_hash")
-    private String lookupCodeHash;
+    private String lookupCodeHash; // 조회용 코드 해시
 
-    // ✅ JPA용 기본 생성자 (그대로 둬야 함)
-    protected Application() {}
+    protected Application() {
+        // JPA 기본 생성자(필수)
+    }
 
-    // ✅ 서비스에서 생성할 때 쓰는 생성자 (이게 핵심)
     public Application(String studentId, String name, String phone, int lockerNumber, Status status) {
+        // 서비스에서 새 신청 생성할 때 사용하는 생성자
         this.studentId = studentId;
         this.name = name;
         this.phone = phone;
@@ -56,6 +56,7 @@ public class Application {
 
     @PrePersist
     void prePersist() {
+        // 엔티티가 DB에 처음 저장되기 직전에 createdAt 자동 세팅
         if (createdAt == null) createdAt = Instant.now();
     }
 
@@ -70,7 +71,7 @@ public class Application {
     public String getMemo() { return memo; }
     public String getLookupCodeHash() { return lookupCodeHash; }
 
-    // setters (필요하면)
+    // setters
     public void setStatus(Status status) { this.status = status; }
     public void setMemo(String memo) { this.memo = memo; }
     public void setLookupCodeHash(String lookupCodeHash) { this.lookupCodeHash = lookupCodeHash; }

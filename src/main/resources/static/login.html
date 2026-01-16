@@ -27,6 +27,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 24px 16px;
+            color: var(--text);
         }
 
         .card {
@@ -44,13 +46,6 @@
             font-size: 20px;
             font-weight: 800;
             margin-bottom: 6px;
-        }
-
-        .subtitle {
-            text-align: center;
-            font-size: 13px;
-            color: var(--muted);
-            margin-bottom: 22px;
         }
 
         label {
@@ -75,7 +70,7 @@
             border-color: var(--primary);
         }
 
-        button {
+        button[type="submit"] {
             width: 100%;
             padding: 12px;
             border-radius: 10px;
@@ -100,15 +95,11 @@
             font-size: 13px;
         }
 
-        .links button {
-            background: none;
-            border: none;
+        .links a {
             color: #2563eb;
             font-size: 13px;
-            cursor: pointer;
             text-decoration: underline;
-            padding: 0;
-            margin: 0;
+            font-weight: 700;
         }
 
         .footer {
@@ -124,7 +115,7 @@
 <div class="card">
     <div class="title">로그인</div>
 
-    <!-- Spring Security 기본 로그인 처리 -->
+    <!-- Spring Security 로그인 처리 엔드포인트(/login)로 POST -->
     <form method="post" action="/login">
         <label for="username">아이디</label>
         <input
@@ -134,6 +125,7 @@
                 placeholder="관리자 아이디"
                 required
                 autofocus
+                autocomplete="username"
         />
 
         <label for="password">비밀번호</label>
@@ -149,17 +141,13 @@
         <button type="submit">로그인</button>
     </form>
 
-    <!-- 로그인 실패 메시지 -->
+    <!-- 로그인 실패 시 (?error) -->
     <div class="error" id="errorMsg" style="display:none;">
         아이디 또는 비밀번호가 올바르지 않습니다.
     </div>
 
-    <!-- 비밀번호 변경 링크 -->
     <div class="links">
-        <a href="/admin-password.html"
-           style="color:#2563eb; font-size:13px; text-decoration:underline; font-weight:700;">
-            비밀번호 변경
-        </a>
+        <a href="/admin-password.html">비밀번호 변경</a>
     </div>
 
     <div class="footer">
@@ -168,12 +156,11 @@
 </div>
 
 <script>
-    // 로그인 실패 시 (?error)
+    // URL에 ?error가 붙으면 실패 메시지 표시
     const params = new URLSearchParams(window.location.search);
     if (params.has("error")) {
         document.getElementById("errorMsg").style.display = "block";
     }
-
 </script>
 </body>
 </html>

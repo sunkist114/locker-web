@@ -16,6 +16,9 @@ import java.util.List;
 @Service
 public class LockerService {
 
+    private static final int LOCKER_MIN = 1;
+    private static final int LOCKER_MAX = 50;
+
     private final LockerRepository lockerRepo;
     private final ApplicationRepository appRepo;
     private final PasswordEncoder passwordEncoder;
@@ -31,29 +34,44 @@ public class LockerService {
     public record LockerDto(int lockerNumber, String state, String studentId) {}
     public record PendingDto(long id, String studentId, String name, String phone, int lockerNumber) {}
 
+    public record MyStatusDto(
+            String studentId,
+            String status,        // NONE / PENDING / APPROVED
+            Integer lockerNumber, // 없으면 null
+            String message
+    ) {}
+
+    public record MyLockerDto(
+            String status,        // NONE / PENDING / APPROVED
+            String message,
+            String studentId,
+            String name,
+            String phone,
+            Integer lockerNumber,
+            String memo
+    ) {}
+
     @PostConstruct
     @Transactional
     public void initLockers() {
-        for (int i = 1; i <= 50; i++) {
+        // 서버 시작 시 1..50 사물함 row가 없으면 생성
+        for (int i = LOCKER_MIN; i <= LOCKER_MAX; i++) {
             final int n = i;
             lockerRepo.findById(n).orElseGet(() -> lockerRepo.save(new Locker(n)));
         }
     }
 
-    // -----------------------
-    // Public
-    // -----------------------
-
     @Transactional(readOnly = true)
     public List<LockerDto> getLockerGrid() {
+        // 1..50 전체를 조회해서 프론트에 보여줄 상태 그리드 생성
         List<LockerDto> out = new ArrayList<>();
-        for (int i = 1; i <= 50; i++) {
+        for (int i = LOCKER_MIN; i <= LOCKER_MAX; i++) {
             final int n = i;
             Locker l = lockerRepo.findById(n)
                     .orElseThrow(() -> new IllegalArgumentException("없는 사물함: " + n));
 
             String status = l.getState().name();
-            if ("RESERVED".equals(status)) status = "PENDING";
+            if ("RESERVED".equals(status)) status = "PENDING"; // UI 표시용 변환
 
             out.add(new LockerDto(
                     l.getLockerNumber(),
@@ -64,14 +82,14 @@ public class LockerService {
         return out;
     }
 
-    /** ✅ 6자리 확인코드 생성 */
     private String generateLookupCode() {
-        int v = random.nextInt(900000) + 100000; // 100000~999999
+        // 6자리 확인코드(100000~999999)
+        int v = random.nextInt(900000) + 100000;
         return String.valueOf(v);
     }
 
-    /** ✅ 최신 신청 1개 기준으로 code 검증 */
     private Application requireValidLookup(String studentId, String code) {
+        // 최신 신청 1건 기준으로 학번+확인코드(해시) 검증
         if (studentId == null || studentId.trim().isEmpty()) {
             throw new IllegalArgumentException("학번이 비었습니다.");
         }
@@ -83,7 +101,6 @@ public class LockerService {
                 .orElseThrow(() -> new IllegalStateException("학번 또는 확인코드가 올바르지 않습니다."));
 
         if (app.getLookupCodeHash() == null || app.getLookupCodeHash().isBlank()) {
-            // 예전 데이터(코드 없던 시절) 방어
             throw new IllegalStateException("확인코드가 설정되어 있지 않습니다. 다시 신청해주세요.");
         }
 
@@ -94,13 +111,14 @@ public class LockerService {
         return app;
     }
 
-    /** ✅ 같은 학번이 이미 PENDING/APPROVED면 중복 신청 방지 */
     private void preventDuplicateApply(String studentId) {
+        // 같은 학번이 이미 PENDING/APPROVED면 중복 신청 방지
         var opt = appRepo.findTopByStudentIdOrderByIdDesc(studentId);
         if (opt.isEmpty()) return;
 
         Application last = opt.get();
-        // 사물함이 AVAILABLE로 풀렸으면 과거 기록이므로 허용(방어 로직)
+
+        // 사물함이 AVAILABLE이면 과거 기록으로 보고 허용(방어 로직)
         Locker locker = lockerRepo.findById(last.getLockerNumber()).orElse(null);
         boolean stillUsing = locker != null && locker.getState() != Locker.State.AVAILABLE;
 
@@ -109,9 +127,9 @@ public class LockerService {
         }
     }
 
-    /** ✅ 신청: 확인코드 발급해서 리턴 */
     @Transactional
     public String apply(String studentId, String name, String phone, int lockerNumber) {
+        // 학생 신청: AVAILABLE 사물함을 RESERVED로 바꾸고, 확인코드를 1회 반환
         studentId = studentId.trim();
         name = name.trim();
         phone = phone.trim();
@@ -136,15 +154,12 @@ public class LockerService {
         locker.setReservedStudentId(studentId);
         lockerRepo.save(locker);
 
-        return code; // ✅ 프론트에 한 번 보여줄 값
+        return code;
     }
 
-    /**
-     * ✅ 관리자: 비어있는(AVAILABLE) 사물함에 사용자를 직접 지정하고 즉시 승인(APPROVED) 처리
-     *  - 확인코드(lookup code)는 자동 생성되어 반환됨
-     */
     @Transactional
     public String adminAssignApproved(String studentId, String name, String phone, int lockerNumber) {
+        // 관리자 직권 승인: AVAILABLE 사물함에 사용자를 지정하고 즉시 APPROVED 처리
         studentId = studentId.trim();
         name = name.trim();
         phone = phone.trim();
@@ -172,12 +187,9 @@ public class LockerService {
         return code;
     }
 
-    // -----------------------
-    // Admin
-    // -----------------------
-
     @Transactional(readOnly = true)
     public List<PendingDto> getPendingList() {
+        // 관리자: 대기(PENDING) 신청 목록
         List<Application> list = appRepo.findByStatus(Application.Status.PENDING);
         List<PendingDto> out = new ArrayList<>();
         for (Application a : list) {
@@ -194,6 +206,7 @@ public class LockerService {
 
     @Transactional
     public void approve(long applicationId) {
+        // 관리자: PENDING 신청을 APPROVED로 변경 + 사물함 상태 APPROVED로 변경
         Application app = appRepo.findById(applicationId)
                 .orElseThrow(() -> new IllegalArgumentException("없는 신청: " + applicationId));
 
@@ -217,6 +230,7 @@ public class LockerService {
 
     @Transactional
     public void reject(long applicationId) {
+        // 관리자: 신청 삭제, RESERVED였다면 사물함을 AVAILABLE로 복구
         Application app = appRepo.findById(applicationId)
                 .orElseThrow(() -> new IllegalArgumentException("없는 신청: " + applicationId));
 
@@ -234,6 +248,7 @@ public class LockerService {
 
     @Transactional
     public void clearApprovedLocker(int lockerNumber) {
+        // 관리자: 승인된 사물함 비우기(신청 기록 삭제 + 사물함 AVAILABLE)
         Locker locker = lockerRepo.findById(lockerNumber)
                 .orElseThrow(() -> new IllegalArgumentException("없는 사물함: " + lockerNumber));
 
@@ -250,9 +265,10 @@ public class LockerService {
 
     @Transactional
     public void resetAll() {
+        // 관리자: 전체 초기화(신청 전체 삭제 + 모든 사물함 AVAILABLE)
         appRepo.deleteAll();
 
-        for (int i = 1; i <= 50; i++) {
+        for (int i = LOCKER_MIN; i <= LOCKER_MAX; i++) {
             final int n = i;
             Locker locker = lockerRepo.findById(n).orElseGet(() -> new Locker(n));
             locker.setState(Locker.State.AVAILABLE);
@@ -261,29 +277,9 @@ public class LockerService {
         }
     }
 
-    // -----------------------
-    // Student APIs
-    // -----------------------
-
-    public record MyStatusDto(
-            String studentId,
-            String status,        // NONE / PENDING / APPROVED
-            Integer lockerNumber, // 없으면 null
-            String message
-    ) {}
-
-    public record MyLockerDto(
-            String status,        // NONE / PENDING / APPROVED
-            String message,
-            String studentId,
-            String name,
-            String phone,
-            Integer lockerNumber,
-            String memo
-    ) {}
-
     @Transactional(readOnly = true)
     public MyStatusDto getMyStatus(String studentId, String code) {
+        // 학생: 학번+확인코드로 "내 상태" 조회
         Application app = requireValidLookup(studentId, code);
 
         Locker locker = lockerRepo.findById(app.getLockerNumber()).orElse(null);
@@ -299,11 +295,20 @@ public class LockerService {
 
     @Transactional(readOnly = true)
     public MyLockerDto getMyLocker(String studentId, String code) {
+        // 학생: 학번+확인코드로 "내 사물함 정보" 조회
         Application app = requireValidLookup(studentId, code);
 
         if (app.getStatus() != Application.Status.APPROVED) {
             if (app.getStatus() == Application.Status.PENDING) {
-                return new MyLockerDto("PENDING", "신청이 접수되었습니다. 관리자 승인을 기다려주세요.", studentId, null, null, app.getLockerNumber(), null);
+                return new MyLockerDto(
+                        "PENDING",
+                        "신청이 접수되었습니다. 관리자 승인을 기다려주세요.",
+                        studentId,
+                        null,
+                        null,
+                        app.getLockerNumber(),
+                        null
+                );
             }
             return new MyLockerDto("NONE", "현재 사용 중인 사물함이 없습니다.", studentId, null, null, null, null);
         }
@@ -321,6 +326,7 @@ public class LockerService {
 
     @Transactional
     public void saveMyMemo(String studentId, String code, String memo) {
+        // 학생: 승인 상태 + 본인 사물함인지 확인 후 메모 저장
         Application app = requireValidLookup(studentId, code);
 
         if (app.getStatus() != Application.Status.APPROVED) {
@@ -340,6 +346,7 @@ public class LockerService {
 
     @Transactional
     public void emptyMyLocker(String studentId, String code) {
+        // 학생: 승인 상태 + 본인 사물함인지 확인 후 반납 처리
         Application app = requireValidLookup(studentId, code);
 
         if (app.getStatus() != Application.Status.APPROVED) {

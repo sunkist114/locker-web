@@ -29,8 +29,9 @@
             --focus: rgba(147,197,253,.22);
         }
 
-        *{box-sizing:border-box;}
+        *{ box-sizing:border-box; }
         html, body{ width:100%; }
+
         body{
             margin:0;
             font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif;
@@ -52,12 +53,14 @@
             gap:14px;
             margin-bottom:14px;
         }
+
         .headerLeft h1{
             margin:0;
             font-size:30px;
             font-weight:950;
             letter-spacing:-.02em;
         }
+
         .headerLeft p{
             margin:6px 0 0;
             color:var(--muted);
@@ -83,7 +86,10 @@
             transform:translateY(-1px);
             box-shadow:0 10px 22px rgba(15,23,42,.10);
         }
-        .btn:active{ transform:translateY(0px); filter:brightness(.98); }
+        .btn:active{
+            transform:translateY(0px);
+            filter:brightness(.98);
+        }
 
         .btnPrimary{
             border-color:transparent;
@@ -117,7 +123,7 @@
             min-width:0;
         }
 
-        /* ✅ TOP: 2열 유지 + 같이 줄어듦 */
+        /* TOP 카드 (2열 고정) */
         .topCard{
             padding: clamp(12px, 2.2vw, 18px);
             display:grid;
@@ -128,18 +134,22 @@
         }
 
         @media (max-width:760px){
-            .header{ flex-direction:column; align-items:stretch; }
-            .headerRight{ display:flex; justify-content:flex-end; }
+            .header{
+                flex-direction:column;
+                align-items:stretch;
+            }
+            .headerRight{
+                display:flex;
+                justify-content:flex-end;
+            }
         }
 
-        /* ✅ 좌/우 높이: 기본은 살짝 안정적으로 */
         .topSide{
             height:100%;
             min-height:190px;
             min-width:0;
         }
 
-        /* ✅ 사물함 박스 */
         .lockerBox{
             border:1px solid var(--border);
             border-radius:18px;
@@ -179,6 +189,7 @@
             filter:drop-shadow(0 10px 18px rgba(15,23,42,.08));
             flex:0 0 auto;
         }
+
         @media (max-width:380px){
             .lockerSvg{ width:165px; }
         }
@@ -194,7 +205,6 @@
             min-width:0;
         }
 
-        /* ✅ 기본(PC)에서는 원래처럼 안정적인 높이 */
         .linesFill{
             display:grid;
             grid-template-rows: repeat(3, 1fr);
@@ -221,6 +231,7 @@
             letter-spacing:.01em;
             flex:0 0 auto;
         }
+
         .value{
             font-weight:950;
             color:var(--text);
@@ -245,6 +256,7 @@
             margin-top:16px;
             padding:18px;
         }
+
         .memoHeader{
             display:flex;
             align-items:center;
@@ -252,12 +264,14 @@
             gap:12px;
             margin-bottom:12px;
         }
+
         .memoHeader h2{
             margin:0;
             font-size:18px;
             font-weight:950;
             letter-spacing:-.01em;
         }
+
         .memoActions{
             display:flex;
             align-items:center;
@@ -272,10 +286,12 @@
             overflow:hidden;
             min-width:0;
         }
+
         .recordSection{
             padding:12px;
             min-width:0;
         }
+
         .recordDivider{
             height:1px;
             background:var(--border);
@@ -288,14 +304,17 @@
             gap:10px;
             margin-bottom:10px;
         }
+
         .itemsTitle{
             font-size:14px;
             font-weight:950;
             color:var(--text);
             letter-spacing:-.01em;
         }
+
         .addBtn{
-            width:38px;height:38px;
+            width:38px;
+            height:38px;
             border-radius:12px;
             border:1px solid var(--border);
             background:#fff;
@@ -305,7 +324,10 @@
             transition:transform .12s ease, box-shadow .12s ease;
             flex:0 0 auto;
         }
-        .addBtn:hover{ transform:translateY(-1px); box-shadow:0 10px 22px rgba(15,23,42,.10); }
+        .addBtn:hover{
+            transform:translateY(-1px);
+            box-shadow:0 10px 22px rgba(15,23,42,.10);
+        }
         .addBtn:active{ transform:translateY(0px); }
 
         .itemList{
@@ -317,11 +339,12 @@
             gap:10px;
             min-width:0;
         }
+
         .item{
             background:#fff;
             border:1px solid var(--border);
             border-radius:14px;
-            padding:10px 10px;
+            padding:10px;
             display:flex;
             align-items:center;
             gap:10px;
@@ -341,7 +364,8 @@
         }
 
         .handle{
-            width:36px;height:36px;
+            width:36px;
+            height:36px;
             border-radius:12px;
             border:1px solid var(--border);
             background:linear-gradient(180deg, rgba(15,31,58,.06), transparent);
@@ -374,8 +398,10 @@
         }
 
         .menuWrap{ position:relative; flex:0 0 auto; }
+
         .dots{
-            width:38px;height:38px;
+            width:38px;
+            height:38px;
             border-radius:12px;
             border:1px solid var(--border);
             background:#fff;
@@ -384,6 +410,7 @@
             box-shadow:0 7px 16px rgba(15,23,42,.06);
             flex:0 0 auto;
         }
+
         .menu{
             position:absolute;
             right:0;
@@ -398,12 +425,13 @@
             z-index:10;
         }
         .menu.open{ display:block; }
+
         .menu button{
             width:100%;
             border:none;
             background:#fff;
             text-align:left;
-            padding:10px 10px;
+            padding:10px;
             border-radius:10px;
             cursor:pointer;
             font-weight:850;
@@ -417,6 +445,7 @@
             margin:0 0 10px;
             color:var(--text);
         }
+
         textarea{
             width:100%;
             min-height:170px;
@@ -441,7 +470,7 @@
             padding:0 2px;
         }
 
-        /* ========= Empty locker modal ========= */
+        /* Empty locker modal */
         .modalOverlay{
             position:fixed;
             inset:0;
@@ -472,6 +501,7 @@
             border-bottom:1px solid var(--border);
             background:#fbfdff;
         }
+
         .modalTitle{
             display:flex;
             align-items:center;
@@ -479,8 +509,10 @@
             font-weight:950;
             letter-spacing:-.01em;
         }
+
         .badgeWarn{
-            width:28px;height:28px;
+            width:28px;
+            height:28px;
             border-radius:10px;
             background:rgba(147,197,253,.20);
             border:1px solid rgba(147,197,253,.55);
@@ -492,7 +524,8 @@
         }
 
         .iconBtn{
-            width:34px;height:34px;
+            width:34px;
+            height:34px;
             border-radius:12px;
             border:1px solid var(--border);
             background:#fff;
@@ -509,6 +542,7 @@
             color:var(--text);
             margin:10px 0 8px;
         }
+
         .input{
             width:100%;
             border:1px solid var(--border);
@@ -545,9 +579,7 @@
 
         body.modalOpen{ overflow:hidden; }
 
-        /* =====================================================
-           ✅ 모바일 최적화(요청사항): TOP 세로 줄이고, 값 안 잘리게
-           ===================================================== */
+        /* 모바일 최적화 */
         @media (max-width:600px){
             .wrap{ margin:20px auto; padding:0 14px 64px; }
             .headerLeft h1{ font-size:24px; }
@@ -555,10 +587,9 @@
             .topCard{
                 padding:12px;
                 gap:12px;
-                grid-template-columns: 130px 1fr; /* 더 작게 해서 값이 보이게 */
+                grid-template-columns: 130px 1fr;
             }
 
-            /* 모바일에서는 세로 강제 높이 제거 */
             .topSide{
                 height:auto;
                 min-height:0;
@@ -568,7 +599,6 @@
             .lockerSvg{ width:120px; }
             .infoLines{ padding:10px 12px; border-radius:16px; }
 
-            /* 모바일에서는 줄 높이/공간을 내용 기준으로 */
             .linesFill{
                 display:flex;
                 flex-direction:column;
@@ -588,7 +618,6 @@
                 font-size:12px;
             }
 
-            /* ✅ 값 절대 안 잘리게(필요시 줄바꿈 허용) */
             .value{
                 font-size:14px;
                 white-space:normal;
@@ -600,6 +629,8 @@
             .memoCard{ padding:14px; }
             textarea{ min-height:140px; font-size:14px; }
         }
+
+
     </style>
 </head>
 
@@ -705,7 +736,7 @@
     </div>
 </div>
 
-<!-- ====== Empty locker modal ====== -->
+<!-- 비우기 모달 -->
 <div class="modalOverlay" id="emptyModalOverlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="emptyModalTitle">
         <div class="modalHead">
@@ -718,10 +749,22 @@
 
         <div class="modalBody">
             <div class="fieldLabel">학번을 입력하세요</div>
-            <input class="input" id="emptyModalInput" placeholder="예: 20244029" autocomplete="off" inputmode="numeric" />
+            <input
+                    class="input"
+                    id="emptyModalInput"
+                    placeholder="예: 20244029"
+                    autocomplete="off"
+                    inputmode="numeric"
+            />
 
             <div class="fieldLabel">확인코드를 입력하세요</div>
-            <input class="input" id="emptyModalCode" placeholder="6자리 확인코드" autocomplete="off" inputmode="numeric" />
+            <input
+                    class="input"
+                    id="emptyModalCode"
+                    placeholder="6자리 확인코드"
+                    autocomplete="off"
+                    inputmode="numeric"
+            />
         </div>
 
         <div class="modalFoot">
@@ -734,9 +777,9 @@
 <script>
     const el = (id) => document.getElementById(id);
 
-    function qsAny(keys){
+    function qsAny(keys) {
         const u = new URL(window.location.href);
-        for (const k of keys){
+        for (const k of keys) {
             const v = (u.searchParams.get(k) || "").trim();
             if (v) return v;
         }
@@ -746,20 +789,22 @@
     const MARK_ITEMS = "----ITEMS----";
     const MARK_NOTE  = "----NOTE----";
 
-    function serializeMemo(items, note){
+    // items + note를 하나의 memo 문자열로 합쳐 저장
+    function serializeMemo(items, note) {
         const safeItems = (items || []).map(s => (s || "").trim()).filter(Boolean);
         const safeNote = (note || "");
         return `${MARK_ITEMS}\n${safeItems.map(x => `- ${x}`).join("\n")}\n${MARK_NOTE}\n${safeNote}`.trim();
     }
 
-    function parseMemo(raw){
+    // 저장된 memo 문자열을 items/note로 다시 분리
+    function parseMemo(raw) {
         const text = (raw || "").trim();
         if (!text) return { items: [], note: "" };
 
         const iItems = text.indexOf(MARK_ITEMS);
         const iNote  = text.indexOf(MARK_NOTE);
 
-        if (iItems === -1 || iNote === -1 || iNote < iItems){
+        if (iItems === -1 || iNote === -1 || iNote < iItems) {
             return { items: [], note: raw || "" };
         }
 
@@ -776,7 +821,7 @@
 
     let dragSrcEl = null;
 
-    function buildItemRow(text){
+    function buildItemRow(text) {
         const li = document.createElement("li");
         li.className = "item";
         li.setAttribute("draggable", "true");
@@ -907,14 +952,14 @@
         return li;
     }
 
-    function getItemsFromUI(){
+    function getItemsFromUI() {
         const list = el("itemList");
         return Array.from(list.querySelectorAll(".itemText"))
             .map(x => (x.textContent || "").trim())
             .filter(Boolean);
     }
 
-    function setItemsToUI(items){
+    function setItemsToUI(items) {
         const list = el("itemList");
         list.innerHTML = "";
         (items || []).forEach(t => list.appendChild(buildItemRow(t)));
@@ -924,26 +969,27 @@
         document.querySelectorAll(".menu.open").forEach(m => m.classList.remove("open"));
     });
 
+    // URL 파라미터로 학번/확인코드 받기
     const studentId = qsAny(["studentId","studentID","id","sid"]);
     const code = qsAny(["code","lookupCode","token"]);
 
-    if (!studentId || !code){
+    if (!studentId || !code) {
         alert("잘못된 접근입니다. 신청 페이지에서 학번+확인코드로 조회해주세요.");
         window.location.replace("/student.html");
     }
 
-    function pickLockerNumber(data){
+    function pickLockerNumber(data) {
         const candidates = [
             data?.lockerNumber, data?.lockerNo, data?.locker,
             data?.locker_id, data?.lockerId, data?.locker_num, data?.lockerNum
         ];
-        for (const c of candidates){
+        for (const c of candidates) {
             if (c !== undefined && c !== null && String(c).trim() !== "") return String(c);
         }
         return "-";
     }
 
-    async function load(){
+    async function load() {
         el("topMsg").textContent = "불러오는 중...";
 
         const r = await fetch(
@@ -952,15 +998,15 @@
         );
 
         let data = null;
-        try{ data = await r.json(); }catch(e){}
+        try { data = await r.json(); } catch (e) {}
 
-        if (!r.ok || !data){
+        if (!r.ok || !data) {
             alert("불러오기 실패: 서버 응답이 올바르지 않습니다.");
             window.location.replace("/student.html");
             return;
         }
 
-        if (data.status !== "APPROVED"){
+        if (data.status !== "APPROVED") {
             alert(data.message || "현재 사용 중인 사물함이 없습니다.");
             window.location.replace("/student.html");
             return;
@@ -976,19 +1022,20 @@
         el("memo").value = parsed.note || "";
     }
 
-    async function saveAll(){
+    async function saveAll() {
         el("memoMsg").textContent = "저장 중...";
+
         const items = getItemsFromUI();
         const note = el("memo").value;
         const memoCombined = serializeMemo(items, note);
 
         const r = await fetch("/api/public/my-locker/memo", {
-            method:"POST",
-            headers:{ "Content-Type":"application/json" },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ studentId, code, memo: memoCombined })
         });
 
-        if (!r.ok){
+        if (!r.ok) {
             const t = await r.text();
             el("memoMsg").textContent = "저장 실패: " + t;
             return;
@@ -998,12 +1045,12 @@
         setTimeout(() => (el("memoMsg").textContent = ""), 1400);
     }
 
-    function openEmptyModal(){
+    function openEmptyModal() {
         el("emptyModalInput").value = "";
         el("emptyModalCode").value = "";
         el("emptyModalOverlay").classList.add("open");
         document.body.classList.add("modalOpen");
-        el("emptyModalOverlay").setAttribute("aria-hidden","false");
+        el("emptyModalOverlay").setAttribute("aria-hidden", "false");
 
         el("emptyModalConfirm").disabled = false;
         el("emptyModalCancel").disabled = false;
@@ -1011,52 +1058,34 @@
         setTimeout(() => el("emptyModalInput").focus(), 0);
     }
 
-    function closeEmptyModal(){
+    function closeEmptyModal() {
         el("emptyModalOverlay").classList.remove("open");
         document.body.classList.remove("modalOpen");
-        el("emptyModalOverlay").setAttribute("aria-hidden","true");
+        el("emptyModalOverlay").setAttribute("aria-hidden", "true");
     }
 
-    async function runEmptyLocker(){
+    async function runEmptyLocker() {
         const typed = (el("emptyModalInput").value || "").trim();
         const typedCode = (el("emptyModalCode").value || "").trim();
 
-        if (!typed){
-            alert("학번을 입력해주세요.");
-            return;
-        }
-        if (!/^\d+$/.test(typed)){
-            alert("학번은 숫자만 입력해주세요.");
-            return;
-        }
-        if (typed !== studentId){
-            alert("학번이 일치하지 않습니다.");
-            return;
-        }
+        if (!typed) { alert("학번을 입력해주세요."); return; }
+        if (!/^\d+$/.test(typed)) { alert("학번은 숫자만 입력해주세요."); return; }
+        if (typed !== studentId) { alert("학번이 일치하지 않습니다."); return; }
 
-        if (!typedCode){
-            alert("확인코드를 입력해주세요.");
-            return;
-        }
-        if (!/^\d{6}$/.test(typedCode)){
-            alert("확인코드는 6자리 숫자입니다.");
-            return;
-        }
-        if (typedCode !== code){
-            alert("확인코드가 일치하지 않습니다.");
-            return;
-        }
+        if (!typedCode) { alert("확인코드를 입력해주세요."); return; }
+        if (!/^\d{6}$/.test(typedCode)) { alert("확인코드는 6자리 숫자입니다."); return; }
+        if (typedCode !== code) { alert("확인코드가 일치하지 않습니다."); return; }
 
         el("emptyModalConfirm").disabled = true;
         el("emptyModalCancel").disabled = true;
 
         const r = await fetch("/api/public/my-locker/empty", {
-            method:"POST",
-            headers:{ "Content-Type":"application/json" },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ studentId, code })
         });
 
-        if (!r.ok){
+        if (!r.ok) {
             const t = await r.text();
             alert("실패: " + t);
             el("emptyModalConfirm").disabled = false;
@@ -1089,7 +1118,7 @@
         if (e.key === "Escape" && el("emptyModalOverlay").classList.contains("open")) closeEmptyModal();
     });
 
-    function addItem(){
+    function addItem() {
         const list = el("itemList");
         const li = buildItemRow("");
         list.appendChild(li);
