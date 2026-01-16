@@ -36,7 +36,7 @@
             font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR","Apple SD Gothic Neo",Arial,sans-serif;
             color:var(--text);
             background:var(--bg);
-            overflow-x:hidden; /* ✅ 가로 스크롤 방지 */
+            overflow-x:hidden;
         }
 
         .wrap{
@@ -91,7 +91,6 @@
             color:#fff;
         }
 
-        /* ✅ “내 사물함 비우기” : 연한 하늘색 + 그림자 없음 */
         .btnSkySoft{
             border-color:var(--skyBtnBorder);
             background:var(--skyBtnBg);
@@ -115,10 +114,10 @@
             border:1px solid var(--border);
             border-radius:var(--radius);
             box-shadow:var(--shadow);
-            min-width:0; /* ✅ 내부 overflow 방지 */
+            min-width:0;
         }
 
-        /* ✅ TOP: 2열 유지 + 항상 같이 줄어듦 (1,2번 반영) */
+        /* ✅ TOP: 2열 유지 + 같이 줄어듦 */
         .topCard{
             padding: clamp(12px, 2.2vw, 18px);
             display:grid;
@@ -133,28 +132,10 @@
             .headerRight{ display:flex; justify-content:flex-end; }
         }
 
-        /* ✅ 모바일: 2열 유지하되, 화면이 줄면 요소 크기도 같이 축소 */
-        @media (max-width:600px){
-            .wrap{ margin:20px auto; padding:0 14px 64px; }
-            .headerLeft h1{ font-size:24px; }
-
-            .topCard{
-                padding:12px;
-                gap:12px;
-                grid-template-columns: clamp(150px, 34vw, 210px) 1fr;
-            }
-
-            .lockerBox{ padding:10px; border-radius:16px; }
-            .infoLines{ padding:10px 12px; border-radius:16px; }
-
-            .memoCard{ padding:14px; }
-            textarea{ min-height:140px; font-size:14px; }
-        }
-
-        /* ✅ 좌/우 높이도 같이 줄어들게 (2번 반영) */
+        /* ✅ 좌/우 높이: 기본은 살짝 안정적으로 */
         .topSide{
             height:100%;
-            min-height: clamp(150px, 34vw, 190px);
+            min-height:190px;
             min-width:0;
         }
 
@@ -189,7 +170,6 @@
             border:1px solid transparent;
         }
 
-        /* ✅ SVG도 같이 줄어들게 (2번 반영) */
         .lockerSvg{
             width: clamp(140px, 30vw, 190px);
             height:auto;
@@ -214,38 +194,37 @@
             min-width:0;
         }
 
-        /* ✅ 높이도 같이 줄어들게 (2번 반영) */
+        /* ✅ 기본(PC)에서는 원래처럼 안정적인 높이 */
         .linesFill{
             display:grid;
             grid-template-rows: repeat(3, 1fr);
             height:100%;
-            min-height: clamp(150px, 34vw, 190px);
+            min-height:190px;
         }
 
-        /* ✅ 3) 텍스트/라벨도 같이 줄어들게 (3번 반영) */
         .line{
             display:flex;
             align-items:center;
-            gap: clamp(10px, 2vw, 12px);
-            padding: 0 clamp(6px, 1.6vw, 10px);
+            gap:12px;
+            padding:0 10px;
             border-bottom:1px dashed rgba(230,234,242,.95);
-            font-size: clamp(12px, 2.2vw, 16px);
+            font-size:16px;
             min-width:0;
         }
         .line:last-child{ border-bottom:none; }
 
         .label{
-            width: clamp(64px, 18vw, 110px);
+            width:110px;
             color:var(--muted);
             font-weight:900;
-            font-size: clamp(11px, 1.9vw, 14px);
+            font-size:14px;
             letter-spacing:.01em;
             flex:0 0 auto;
         }
         .value{
             font-weight:950;
             color:var(--text);
-            font-size: clamp(13px, 2.3vw, 17px);
+            font-size:17px;
             min-width:0;
             overflow:hidden;
             text-overflow:ellipsis;
@@ -523,12 +502,6 @@
         .iconBtn:hover{ background:rgba(15,31,58,.04); }
 
         .modalBody{ padding:14px; }
-        .modalDesc{
-            margin:0 0 12px;
-            color:var(--muted);
-            font-size:13px;
-            line-height:1.5;
-        }
 
         .fieldLabel{
             font-size:13px;
@@ -571,6 +544,62 @@
         }
 
         body.modalOpen{ overflow:hidden; }
+
+        /* =====================================================
+           ✅ 모바일 최적화(요청사항): TOP 세로 줄이고, 값 안 잘리게
+           ===================================================== */
+        @media (max-width:600px){
+            .wrap{ margin:20px auto; padding:0 14px 64px; }
+            .headerLeft h1{ font-size:24px; }
+
+            .topCard{
+                padding:12px;
+                gap:12px;
+                grid-template-columns: 130px 1fr; /* 더 작게 해서 값이 보이게 */
+            }
+
+            /* 모바일에서는 세로 강제 높이 제거 */
+            .topSide{
+                height:auto;
+                min-height:0;
+            }
+
+            .lockerBox{ padding:10px; border-radius:16px; }
+            .lockerSvg{ width:120px; }
+            .infoLines{ padding:10px 12px; border-radius:16px; }
+
+            /* 모바일에서는 줄 높이/공간을 내용 기준으로 */
+            .linesFill{
+                display:flex;
+                flex-direction:column;
+                gap:6px;
+                height:auto;
+                min-height:0;
+            }
+
+            .line{
+                padding:6px 6px;
+                font-size:14px;
+                gap:10px;
+            }
+
+            .label{
+                width:72px;
+                font-size:12px;
+            }
+
+            /* ✅ 값 절대 안 잘리게(필요시 줄바꿈 허용) */
+            .value{
+                font-size:14px;
+                white-space:normal;
+                overflow:visible;
+                text-overflow:clip;
+                word-break:break-word;
+            }
+
+            .memoCard{ padding:14px; }
+            textarea{ min-height:140px; font-size:14px; }
+        }
     </style>
 </head>
 
@@ -688,11 +717,9 @@
         </div>
 
         <div class="modalBody">
-            <!-- ✅ 기존 학번 확인 유지 -->
             <div class="fieldLabel">학번을 입력하세요</div>
             <input class="input" id="emptyModalInput" placeholder="예: 20244029" autocomplete="off" inputmode="numeric" />
 
-            <!-- ✅ A번: 확인코드도 같이 입력 -->
             <div class="fieldLabel">확인코드를 입력하세요</div>
             <input class="input" id="emptyModalCode" placeholder="6자리 확인코드" autocomplete="off" inputmode="numeric" />
         </div>
@@ -716,9 +743,6 @@
         return "";
     }
 
-    // --------------------------
-    // memo serialization format
-    // --------------------------
     const MARK_ITEMS = "----ITEMS----";
     const MARK_NOTE  = "----NOTE----";
 
@@ -750,9 +774,6 @@
         return { items, note: notePart };
     }
 
-    // --------------------------
-    // drag & drop list
-    // --------------------------
     let dragSrcEl = null;
 
     function buildItemRow(text){
@@ -771,27 +792,19 @@
         content.spellcheck = false;
         content.textContent = text || "";
 
-        // ================================
-        // ✅ 수정 요청 반영: Enter = 적용(줄바꿈 X)
-        // ================================
         content.addEventListener("keydown", (e) => {
             if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault(); // 줄바꿈 막기
-
-                // 텍스트 정리
+                e.preventDefault();
                 const t = (content.textContent || "").replace(/\n/g, " ").trim();
                 content.textContent = t;
 
-                // 비어있으면 삭제 (원하면 이 블록 제거 가능)
                 if (!t) {
                     li.remove();
                     return;
                 }
 
-                // 적용 = 포커스 해제
                 content.blur();
 
-                // 다음 항목으로 이동 (없으면 새 항목 추가)
                 const list = el("itemList");
                 const items = Array.from(list.querySelectorAll(".itemText"));
                 const idx = items.indexOf(content);
@@ -805,13 +818,11 @@
                 }
             }
 
-            // (옵션) ESC 누르면 편집 종료
             if (e.key === "Escape") {
                 e.preventDefault();
                 content.blur();
             }
         });
-        // ================================
 
         const menuWrap = document.createElement("div");
         menuWrap.className = "menuWrap";
@@ -913,9 +924,6 @@
         document.querySelectorAll(".menu.open").forEach(m => m.classList.remove("open"));
     });
 
-    // --------------------------
-    // ✅ studentId + code (A번)
-    // --------------------------
     const studentId = qsAny(["studentId","studentID","id","sid"]);
     const code = qsAny(["code","lookupCode","token"]);
 
@@ -935,9 +943,6 @@
         return "-";
     }
 
-    // --------------------------
-    // ✅ load (code 포함)
-    // --------------------------
     async function load(){
         el("topMsg").textContent = "불러오는 중...";
 
@@ -971,9 +976,6 @@
         el("memo").value = parsed.note || "";
     }
 
-    // --------------------------
-    // ✅ save (code 포함)
-    // --------------------------
     async function saveAll(){
         el("memoMsg").textContent = "저장 중...";
         const items = getItemsFromUI();
@@ -996,9 +998,6 @@
         setTimeout(() => (el("memoMsg").textContent = ""), 1400);
     }
 
-    // --------------------------
-    // empty locker (모달)
-    // --------------------------
     function openEmptyModal(){
         el("emptyModalInput").value = "";
         el("emptyModalCode").value = "";
@@ -1043,8 +1042,6 @@
             alert("확인코드는 6자리 숫자입니다.");
             return;
         }
-
-        // URL에 있는 code와 다르면, 잘못 입력한 것이므로 막기 (서버 검증 전 1차 방어)
         if (typedCode !== code){
             alert("확인코드가 일치하지 않습니다.");
             return;
@@ -1092,9 +1089,6 @@
         if (e.key === "Escape" && el("emptyModalOverlay").classList.contains("open")) closeEmptyModal();
     });
 
-    // --------------------------
-    // item add
-    // --------------------------
     function addItem(){
         const list = el("itemList");
         const li = buildItemRow("");
@@ -1105,9 +1099,6 @@
         setTimeout(() => (el("itemsMsg").textContent = ""), 1400);
     }
 
-    // --------------------------
-    // wire
-    // --------------------------
     el("saveBtn").addEventListener("click", saveAll);
     el("emptyBtnTop").addEventListener("click", openEmptyModal);
     el("addItemBtn").addEventListener("click", addItem);
