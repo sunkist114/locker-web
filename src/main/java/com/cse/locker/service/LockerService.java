@@ -139,6 +139,39 @@ public class LockerService {
         return code; // ✅ 프론트에 한 번 보여줄 값
     }
 
+    /**
+     * ✅ 관리자: 비어있는(AVAILABLE) 사물함에 사용자를 직접 지정하고 즉시 승인(APPROVED) 처리
+     *  - 확인코드(lookup code)는 자동 생성되어 반환됨
+     */
+    @Transactional
+    public String adminAssignApproved(String studentId, String name, String phone, int lockerNumber) {
+        studentId = studentId.trim();
+        name = name.trim();
+        phone = phone.trim();
+
+        preventDuplicateApply(studentId);
+
+        Locker locker = lockerRepo.findById(lockerNumber)
+                .orElseThrow(() -> new IllegalArgumentException("없는 사물함: " + lockerNumber));
+
+        if (locker.getState() != Locker.State.AVAILABLE) {
+            throw new IllegalStateException("비어있는(AVAILABLE) 사물함만 지정할 수 있습니다.");
+        }
+
+        String code = generateLookupCode();
+        String hash = passwordEncoder.encode(code);
+
+        Application app = new Application(studentId, name, phone, lockerNumber, Application.Status.APPROVED);
+        app.setLookupCodeHash(hash);
+        appRepo.save(app);
+
+        locker.setState(Locker.State.APPROVED);
+        locker.setReservedStudentId(studentId);
+        lockerRepo.save(locker);
+
+        return code;
+    }
+
     // -----------------------
     // Admin
     // -----------------------

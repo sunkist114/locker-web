@@ -118,12 +118,12 @@
             min-width:0; /* ✅ 내부 overflow 방지 */
         }
 
-        /* ✅ TOP: 2열 유지(가로 비중 유지), 창 줄이면 같이 줄어들고 가로 스크롤 X */
+        /* ✅ TOP: 2열 유지 + 항상 같이 줄어듦 (1,2번 반영) */
         .topCard{
-            padding:18px;
+            padding: clamp(12px, 2.2vw, 18px);
             display:grid;
-            grid-template-columns: 240px 1fr; /* (이전처럼 왼쪽 더 좁게) */
-            gap:16px;
+            grid-template-columns: clamp(150px, 34vw, 240px) 1fr;
+            gap: clamp(10px, 2vw, 16px);
             align-items:stretch;
             min-width:0;
         }
@@ -132,6 +132,7 @@
             .header{ flex-direction:column; align-items:stretch; }
             .headerRight{ display:flex; justify-content:flex-end; }
         }
+
         /* ✅ 모바일: 2열 유지하되, 화면이 줄면 요소 크기도 같이 축소 */
         @media (max-width:600px){
             .wrap{ margin:20px auto; padding:0 14px 64px; }
@@ -140,29 +141,20 @@
             .topCard{
                 padding:12px;
                 gap:12px;
-                /* 2열 유지 + 좌측 칸도 같이 줄어듦 */
                 grid-template-columns: clamp(150px, 34vw, 210px) 1fr;
             }
 
-            .topSide{ min-height: clamp(150px, 34vw, 190px); }
             .lockerBox{ padding:10px; border-radius:16px; }
-            .lockerSvg{ width: clamp(140px, 30vw, 180px); }
-
             .infoLines{ padding:10px 12px; border-radius:16px; }
-            .linesFill{ min-height: clamp(150px, 34vw, 190px); }
-
-            .line{ padding:8px 6px; font-size: clamp(12px, 3.6vw, 14px); gap:10px; }
-            .label{ width: clamp(64px, 18vw, 86px); font-size: clamp(11px, 3.2vw, 12px); }
-            .value{ font-size: clamp(13px, 3.8vw, 15px); }
 
             .memoCard{ padding:14px; }
             textarea{ min-height:140px; font-size:14px; }
         }
 
-        /* ✅ 좌/우 높이 맞추기 */
+        /* ✅ 좌/우 높이도 같이 줄어들게 (2번 반영) */
         .topSide{
             height:100%;
-            min-height:190px;
+            min-height: clamp(150px, 34vw, 190px);
             min-width:0;
         }
 
@@ -197,8 +189,9 @@
             border:1px solid transparent;
         }
 
+        /* ✅ SVG도 같이 줄어들게 (2번 반영) */
         .lockerSvg{
-            width:190px;
+            width: clamp(140px, 30vw, 190px);
             height:auto;
             display:block;
             position:relative;
@@ -221,35 +214,38 @@
             min-width:0;
         }
 
+        /* ✅ 높이도 같이 줄어들게 (2번 반영) */
         .linesFill{
             display:grid;
             grid-template-rows: repeat(3, 1fr);
             height:100%;
-            min-height:190px;
+            min-height: clamp(150px, 34vw, 190px);
         }
+
+        /* ✅ 3) 텍스트/라벨도 같이 줄어들게 (3번 반영) */
         .line{
             display:flex;
             align-items:center;
-            gap:12px;
-            padding:0 10px;
+            gap: clamp(10px, 2vw, 12px);
+            padding: 0 clamp(6px, 1.6vw, 10px);
             border-bottom:1px dashed rgba(230,234,242,.95);
-            font-size:16px;
+            font-size: clamp(12px, 2.2vw, 16px);
             min-width:0;
         }
         .line:last-child{ border-bottom:none; }
 
         .label{
-            width:110px;
+            width: clamp(64px, 18vw, 110px);
             color:var(--muted);
             font-weight:900;
-            font-size:14px;
+            font-size: clamp(11px, 1.9vw, 14px);
             letter-spacing:.01em;
             flex:0 0 auto;
         }
         .value{
             font-weight:950;
             color:var(--text);
-            font-size:17px;
+            font-size: clamp(13px, 2.3vw, 17px);
             min-width:0;
             overflow:hidden;
             text-overflow:ellipsis;
@@ -583,7 +579,7 @@
     <div class="header">
         <div class="headerLeft">
             <h1>나의 사물함 정보</h1>
-            <p>현재 사물함 사용 상태와 메모를 관리할 수 있어요.</p>
+            <p>현재 사물함 사용 정보를 확인하고 기록을 관리할 수 있어요.</p>
         </div>
         <div class="headerRight"></div>
     </div>
@@ -774,6 +770,48 @@
         content.contentEditable = "true";
         content.spellcheck = false;
         content.textContent = text || "";
+
+        // ================================
+        // ✅ 수정 요청 반영: Enter = 적용(줄바꿈 X)
+        // ================================
+        content.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault(); // 줄바꿈 막기
+
+                // 텍스트 정리
+                const t = (content.textContent || "").replace(/\n/g, " ").trim();
+                content.textContent = t;
+
+                // 비어있으면 삭제 (원하면 이 블록 제거 가능)
+                if (!t) {
+                    li.remove();
+                    return;
+                }
+
+                // 적용 = 포커스 해제
+                content.blur();
+
+                // 다음 항목으로 이동 (없으면 새 항목 추가)
+                const list = el("itemList");
+                const items = Array.from(list.querySelectorAll(".itemText"));
+                const idx = items.indexOf(content);
+
+                if (idx >= 0 && idx < items.length - 1) {
+                    items[idx + 1].focus();
+                } else {
+                    const next = buildItemRow("");
+                    list.appendChild(next);
+                    next.querySelector(".itemText").focus();
+                }
+            }
+
+            // (옵션) ESC 누르면 편집 종료
+            if (e.key === "Escape") {
+                e.preventDefault();
+                content.blur();
+            }
+        });
+        // ================================
 
         const menuWrap = document.createElement("div");
         menuWrap.className = "menuWrap";

@@ -77,6 +77,17 @@ public class ApiController {
         return ResponseEntity.ok().build();
     }
 
+    // ✅ 관리자: 빈 사물함에 사용자 직접 지정 (즉시 APPROVED) + 확인코드 자동 생성
+    public record AdminAssignReq(String studentId, String name, String phone) {}
+    public record AdminAssignRes(String lookupCode) {}
+
+    @PostMapping("/api/admin/assign/{lockerNumber}")
+    public ResponseEntity<?> adminAssign(@PathVariable int lockerNumber, @RequestBody AdminAssignReq req) {
+        String code = service.adminAssignApproved(req.studentId().trim(), req.name().trim(), req.phone().trim(), lockerNumber);
+        sse.broadcast("changed");
+        return ResponseEntity.ok(new AdminAssignRes(code));
+    }
+
     // ===== Public: My Locker Page =====
     @GetMapping("/api/public/my-locker")
     public LockerService.MyLockerDto myLocker(@RequestParam String studentId, @RequestParam String code) {

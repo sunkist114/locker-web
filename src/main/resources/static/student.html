@@ -202,13 +202,13 @@
         .modal-label{
             display:block;
             font-size: 13px;
-            margin: 10px 0 6px;
+            margin: 2px 0 1px;
             color: var(--muted);
             font-weight: 800;
         }
         .modal-input{
             width:100%;
-            padding: 12px 12px;
+            padding: 8px 10px;
             border: 1px solid var(--border);
             border-radius: 10px;
             outline: none;
@@ -242,6 +242,41 @@
             color: var(--btnText);
             border-color: var(--btn);
         }
+
+        /* ===== 모달 입력 간격 강제 축소 ===== */
+
+        /* 모달 전체 위아래 패딩 줄이기 */
+        .modal-body{
+            padding: 10px 16px !important;
+        }
+
+        /* 설명 문구 아래 여백 줄이기 */
+        .modal-desc{
+            margin: 0 0 6px 0 !important;
+        }
+
+        /* label 기본 margin 완전 제거 */
+        .modal-label{
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* input 아래쪽 여백을 직접 제어 */
+        .modal-input{
+            margin: 0 0 6px 0 !important;
+            padding: 8px 10px !important;
+        }
+
+        /* 마지막 input은 여백 제거 */
+        .modal-input:last-of-type{
+            margin-bottom: 0 !important;
+        }
+
+        /* 버튼 영역 패딩도 살짝 줄이기 */
+        .modal-actions{
+            padding: 10px 16px !important;
+        }
+
     </style>
 </head>
 

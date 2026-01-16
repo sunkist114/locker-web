@@ -89,6 +89,7 @@
       margin-bottom: 12px;
       line-height: 1.4;
     }
+
     /* Pending header row: title + buttons in one line */
     .card-head{
       display:flex;
@@ -98,16 +99,14 @@
       margin-bottom: 8px;
     }
     .card-head h2{
-      margin:0;              /* 기존 h2 margin 제거 */
+      margin:0;
       font-size:16px;
     }
     .head-actions{
       display:flex;
       gap:8px;
-      flex-wrap:nowrap;      /* 한 줄 유지 */
+      flex-wrap:nowrap;
     }
-
-    /* 화면이 정말 좁을 때만 줄바꿈 허용 (선택) */
     @media (max-width: 420px){
       .head-actions{ flex-wrap:wrap; }
     }
@@ -175,6 +174,70 @@
       line-height: 1.5;
       white-space: pre-line;
     }
+
+    /* ===== Modal (Admin assign) ===== */
+    .modal-backdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9999;
+    }
+    .modal-backdrop.hidden{ display:none; }
+    .modal{
+      width: min(520px, 100%);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+      padding: 16px;
+    }
+    .modal-title{
+      font-size: 15px;
+      font-weight: 900;
+      margin: 0 0 8px;
+    }
+    .modal-body{
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 4px;
+      white-space: pre-line;
+    }
+    .modal-actions{
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    /* Assign modal inputs */
+    .form-row{ margin-bottom: 2px; }
+    .label{ display:block; font-size:12px; color: var(--muted); font-weight: 800; margin-bottom: 2px; }
+    .input{
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+      outline: none;
+      background: #fff;
+    }
+    .input:focus{ border-color: rgba(17,24,39,0.35); }
+
+    /* ==========================
+       ✅ 공백 확 줄이기(입력 모달 전용)
+       ========================== */
+    #assignFormBackdrop .modal{ padding: 12px !important; }
+    #assignFormBackdrop .modal-title{ margin: 0 0 6px !important; }
+    #assignFormBackdrop .modal-body{ margin-bottom: 6px !important; line-height: 1.2 !important; }
+    #assignFormBackdrop .form-row{ margin-bottom: 6px !important; }
+    #assignFormBackdrop .form-row:last-child{ margin-bottom: 0 !important; }
+    #assignFormBackdrop .label{ margin: 0 0 2px 0 !important; }
+    #assignFormBackdrop .input{ padding: 7px 10px !important; }
+    #assignFormBackdrop .modal-actions{ padding-top: 6px !important; }
   </style>
 </head>
 <body>
@@ -202,7 +265,6 @@
     </div>
 
     <!-- Pending approvals -->
-    <!-- Pending approvals -->
     <div class="card">
       <div class="card-head">
         <h2>신청 대기 목록</h2>
@@ -213,8 +275,7 @@
       </div>
 
       <table class="table">
-
-      <thead>
+        <thead>
         <tr>
           <th>사물함</th>
           <th>학번</th>
@@ -229,6 +290,42 @@
       </table>
 
       <div class="toast" id="msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Admin assign modals (1세트만 유지) -->
+<div id="assignConfirmBackdrop" class="modal-backdrop hidden" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-title">사용자 지정</div>
+    <div class="modal-body" id="assignConfirmText"></div>
+    <div class="modal-actions">
+      <button class="btn primary" id="assignConfirmYes">지정</button>
+      <button class="btn" id="assignConfirmNo">취소</button>
+    </div>
+  </div>
+</div>
+
+<div id="assignFormBackdrop" class="modal-backdrop hidden" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-title" id="assignFormTitle">사용자 정보 입력</div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label class="label" for="assignStudentId">학번</label>
+        <input class="input" id="assignStudentId" placeholder="20240000" autocomplete="off" />
+      </div>
+      <div class="form-row">
+        <label class="label" for="assignName">이름</label>
+        <input class="input" id="assignName" placeholder="강민선" autocomplete="off" />
+      </div>
+      <div class="form-row">
+        <label class="label" for="assignPhone">전화번호</label>
+        <input class="input" id="assignPhone" placeholder="01012345678" autocomplete="off" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn primary" id="assignSubmit">확인</button>
+      <button class="btn" id="assignCancel">취소</button>
     </div>
   </div>
 </div>
@@ -257,6 +354,83 @@
     document.getElementById("msg").textContent = text || "";
   }
 
+  // ===== Admin Assign (AVAILABLE -> APPROVED) =====
+  let _selectedLockerNo = null;
+
+  function _show(el) { el.classList.remove("hidden"); el.setAttribute("aria-hidden", "false"); }
+  function _hide(el) { el.classList.add("hidden"); el.setAttribute("aria-hidden", "true"); }
+
+  function openAssignConfirm(lockerNo){
+    _selectedLockerNo = lockerNo;
+    document.getElementById("assignConfirmText").textContent = `${lockerNo}번 사물함에 사용자를 지정하시겠습니까?`;
+    _show(document.getElementById("assignConfirmBackdrop"));
+  }
+  function closeAssignConfirm(){ _hide(document.getElementById("assignConfirmBackdrop")); }
+
+  function openAssignForm(){
+    const title = document.getElementById("assignFormTitle");
+    title.textContent = `사물함 사용자 정보 입력`;
+
+    document.getElementById("assignStudentId").value = "";
+    document.getElementById("assignName").value = "";
+    document.getElementById("assignPhone").value = "";
+
+    _show(document.getElementById("assignFormBackdrop"));
+    document.getElementById("assignStudentId").focus();
+  }
+  function closeAssignForm(){ _hide(document.getElementById("assignFormBackdrop")); }
+
+  // 버튼 바인딩
+  document.getElementById("assignConfirmNo").addEventListener("click", () => closeAssignConfirm());
+  document.getElementById("assignConfirmYes").addEventListener("click", () => {
+    closeAssignConfirm();
+    openAssignForm();
+  });
+
+  document.getElementById("assignCancel").addEventListener("click", () => closeAssignForm());
+  document.getElementById("assignSubmit").addEventListener("click", async () => {
+    const studentId = document.getElementById("assignStudentId").value.trim();
+    const name = document.getElementById("assignName").value.trim();
+    const phone = document.getElementById("assignPhone").value.trim();
+
+    if (!studentId || !name || !phone) {
+      alert("학번/이름/전화번호를 모두 입력해주세요.");
+      return;
+    }
+
+    if (!_selectedLockerNo) {
+      alert("사물함 번호가 선택되지 않았습니다.");
+      return;
+    }
+
+    if (!confirm(`${_selectedLockerNo}번 사물함에\n학번: ${studentId}\n이름: ${name}\n전화: ${phone}\n\n이대로 지정할까요?`)) return;
+
+    try {
+      const res = await api(`/api/admin/assign/${_selectedLockerNo}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, name, phone })
+      });
+
+      closeAssignForm();
+      setMsg(`${_selectedLockerNo}번 사용자 지정 완료`);
+      await refreshAll();
+
+      const code = (res && res.lookupCode) ? res.lookupCode : "";
+      alert(`지정이 완료되었습니다.\n\n사용자 조회 확인코드(토큰): ${code}\n\n※ 이 코드는 사용자에게 1회 전달하세요.`);
+    } catch (e) {
+      alert("지정 실패: " + (e?.message || e));
+    }
+  });
+
+  // 바깥 클릭 시 닫기
+  document.getElementById("assignConfirmBackdrop").addEventListener("click", (e) => {
+    if (e.target.id === "assignConfirmBackdrop") closeAssignConfirm();
+  });
+  document.getElementById("assignFormBackdrop").addEventListener("click", (e) => {
+    if (e.target.id === "assignFormBackdrop") closeAssignForm();
+  });
+
   // ✅ "열 기준(1,6,11...)" 표시 순서 만들기 (5행 x 10열)
   function buildDisplayOrder(rows=5, cols=10){
     const order = [];
@@ -273,7 +447,6 @@
     const grid = document.getElementById("lockerGrid");
     grid.innerHTML = "";
 
-    // lockerNumber -> item map
     const map = new Map();
     (items || []).forEach(x => map.set(Number(x.lockerNumber), x));
 
@@ -319,6 +492,13 @@
             alert("비우기 실패: " + e);
           }
         });
+      }
+
+      // ✅ 빈 사물함(AVAILABLE) 클릭 -> 사용자 지정
+      if (s === "AVAILABLE") {
+        div.style.cursor = "pointer";
+        div.title = "클릭하면 사용자를 지정할 수 있습니다.";
+        div.addEventListener("click", () => openAssignConfirm(num));
       }
 
       grid.appendChild(div);
