@@ -70,34 +70,33 @@
         .dot.warn{ background: rgba(251,191,36,0.8); }
         .dot.bad{ background: rgba(239,68,68,0.75); }
 
-        .locker-grid{
-            display:grid;
+        /* ✅ 관리자 페이지와 동일한 스타일 */
+        .locker-grid {
+            display: grid;
             grid-template-columns: repeat(10, 1fr);
-            gap: clamp(4px, 1.6vw, 8px);
-            padding: clamp(6px, 2vw, 10px);
-            border:1px solid var(--border);
-            border-radius:12px;
-            background:#fafafa;
+            gap: 8px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #fafafa;
+            overflow-x: auto;
         }
 
-        /* ✅ 모바일에서도 10칸 유지 + 가로스크롤 없이 버튼 크기만 자동 축소 */
-        .locker{
-            border-radius: clamp(8px, 2vw, 10px);
-            aspect-ratio: 1 / 1;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            padding: 0;
-            text-align:center;
-            font-weight:800;
-            font-size: clamp(10px, 2.6vw, 13px);
-            border:1px solid transparent;
-            user-select:none;
-            cursor:pointer;
+        .locker {
+            border-radius: 10px;
+            padding: 10px 0;
+            text-align: center;
+            font-weight: 800;
+            font-size: 13px;
+            border: 1px solid transparent;
+            user-select: none;
         }
-        .locker.available{ background: rgba(34,197,94,0.25); border-color: rgba(34,197,94,0.25); }
-        .locker.pending{ background: rgba(251,191,36,0.35); border-color: rgba(251,191,36,0.35); }
-        .locker.approved{ background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.25); }
+
+        /* 상태 색상도 관리자 페이지와 동일 */
+        .locker.available { background: rgba(34,197,94,0.25); border-color: rgba(34,197,94,0.25); }
+        .locker.pending   { background: rgba(251,191,36,0.35); border-color: rgba(251,191,36,0.35); }
+        .locker.approved  { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.25); }
+
 
         .toast{
             margin-top:10px;
@@ -368,6 +367,9 @@
 
             div.className = 'locker ' + cls;
             div.textContent = num;
+
+            div.style.cursor = (cls === 'available') ? 'pointer' : 'default';
+            div.title = (cls === 'available') ? '클릭해서 선택' : '선택 불가';
 
             if (cls === 'available') available++;
             else if (cls === 'pending') pending++;
