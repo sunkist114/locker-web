@@ -132,21 +132,31 @@
             .header{ flex-direction:column; align-items:stretch; }
             .headerRight{ display:flex; justify-content:flex-end; }
         }
+        /* ✅ 모바일: 2열 유지하되, 화면이 줄면 요소 크기도 같이 축소 */
+        @media (max-width:600px){
+            .wrap{ margin:20px auto; padding:0 14px 64px; }
+            .headerLeft h1{ font-size:24px; }
 
-        /* ✅ 아주 좁아져도 2열 유지 */
-        @media (max-width:520px){
             .topCard{
                 padding:12px;
                 gap:12px;
-                grid-template-columns: 210px 1fr; /* 함께 줄어듦 */
+                /* 2열 유지 + 좌측 칸도 같이 줄어듦 */
+                grid-template-columns: clamp(150px, 34vw, 210px) 1fr;
             }
-        }
-        @media (max-width:420px){
-            .topCard{
-                padding:10px;
-                gap:10px;
-                grid-template-columns: 190px 1fr;
-            }
+
+            .topSide{ min-height: clamp(150px, 34vw, 190px); }
+            .lockerBox{ padding:10px; border-radius:16px; }
+            .lockerSvg{ width: clamp(140px, 30vw, 180px); }
+
+            .infoLines{ padding:10px 12px; border-radius:16px; }
+            .linesFill{ min-height: clamp(150px, 34vw, 190px); }
+
+            .line{ padding:8px 6px; font-size: clamp(12px, 3.6vw, 14px); gap:10px; }
+            .label{ width: clamp(64px, 18vw, 86px); font-size: clamp(11px, 3.2vw, 12px); }
+            .value{ font-size: clamp(13px, 3.8vw, 15px); }
+
+            .memoCard{ padding:14px; }
+            textarea{ min-height:140px; font-size:14px; }
         }
 
         /* ✅ 좌/우 높이 맞추기 */
