@@ -22,71 +22,73 @@
 
     * { box-sizing: border-box; }
 
-    body {
-      margin: 0;
+    body{
+      margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
     }
 
-    .wrap {
+    .wrap{
       max-width: 1100px;
       margin: 28px auto;
       padding: 0 16px;
     }
 
-    .topbar {
-      display: flex;
+    .topbar{
+      display:flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 14px;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
-    .title {
+    .title{
       font-size: 20px;
-      font-weight: 800;
+      font-weight: 900;
     }
 
-    .top-actions {
-      display: flex;
+    .top-actions{
+      display:flex;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
-    .btn {
+    .btn{
       border: 1px solid var(--border);
       background: var(--card);
       color: var(--text);
       padding: 10px 12px;
       border-radius: 10px;
       cursor: pointer;
-      font-weight: 700;
+      font-weight: 800;
       font-size: 13px;
     }
 
-    .btn.primary {
+    .btn.primary{
       background: var(--btn);
       color: var(--btnText);
       border-color: var(--btn);
     }
 
-    .btn.danger {
+    .btn.danger{
       background: var(--bad);
-      color: white;
+      color: #fff;
       border-color: var(--bad);
     }
 
-    .grid {
-      display: grid;
+    .grid{
+      display:grid;
       grid-template-columns: 1.2fr 0.8fr;
       gap: 14px;
     }
 
-    @media (max-width: 960px) {
-      .grid { grid-template-columns: 1fr; }
-      .top-actions { flex-wrap: wrap; justify-content: flex-end; }
+    @media (max-width: 960px){
+      .grid{ grid-template-columns: 1fr; }
     }
 
-    .card {
+    .card{
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -94,70 +96,36 @@
       box-shadow: 0 6px 16px rgba(0,0,0,0.04);
     }
 
-    .card h2 {
+    .card h2{
       margin: 0 0 8px;
       font-size: 16px;
+      font-weight: 900;
     }
 
-    .hint {
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 12px;
-      line-height: 1.4;
-    }
-
-    /* Pending header row: title + buttons in one line */
-    .card-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-
-    .card-head h2 {
-      margin: 0;
-      font-size: 16px;
-    }
-
-    .head-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: nowrap;
-    }
-
-    @media (max-width: 420px) {
-      .head-actions { flex-wrap: wrap; }
-    }
-
-    /* Locker grid */
-    .legend {
-      display: flex;
+    .legend{
+      display:flex;
       gap: 10px;
       flex-wrap: wrap;
       margin-bottom: 10px;
-    }
-
-    .chip {
-      display: flex;
-      align-items: center;
-      gap: 6px;
       font-size: 12px;
       color: var(--muted);
+      align-items: center;
     }
 
-    .dot {
+    .dot{
       width: 10px;
       height: 10px;
       border-radius: 50%;
+      display:inline-block;
+      margin-right: 6px;
+      vertical-align: middle;
     }
+    .dot.good{ background: rgba(34,197,94,0.6); }
+    .dot.warn{ background: rgba(251,191,36,0.8); }
+    .dot.bad { background: rgba(239,68,68,0.75); }
 
-    .dot.good { background: rgba(34,197,94,0.6); }
-    .dot.warn { background: rgba(251,191,36,0.8); }
-    .dot.bad  { background: rgba(239,68,68,0.75); }
-
-    .locker-grid {
-      display: grid;
+    .locker-grid{
+      display:grid;
       grid-template-columns: repeat(10, 1fr);
       gap: 8px;
       padding: 10px;
@@ -167,82 +135,151 @@
       overflow-x: auto;
     }
 
-    .locker {
+    .locker{
       border-radius: 10px;
       padding: 10px 0;
       text-align: center;
-      font-weight: 800;
+      font-weight: 900;
       font-size: 13px;
       border: 1px solid transparent;
       user-select: none;
     }
 
-    .locker.available { background: rgba(34,197,94,0.25); border-color: rgba(34,197,94,0.25); }
-    .locker.pending   { background: rgba(251,191,36,0.35); border-color: rgba(251,191,36,0.35); }
-    .locker.approved  { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.25); }
+    .locker.available{ background: rgba(34,197,94,0.25); border-color: rgba(34,197,94,0.25); }
+    .locker.pending  { background: rgba(251,191,36,0.35); border-color: rgba(251,191,36,0.35); }
+    .locker.approved { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.25); }
 
-    /* Pending list */
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 6px;
-    }
-
-    .table th,
-    .table td {
-      border-bottom: 1px solid var(--border);
-      padding: 10px 8px;
-      font-size: 13px;
-      text-align: left;
-      vertical-align: middle;
-    }
-
-    .table th {
-      color: var(--muted);
-      font-weight: 800;
-      font-size: 12px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .small {
-      padding: 7px 10px;
-      border-radius: 9px;
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    .small.approve { background: var(--good); color: #fff; border: 1px solid var(--good); }
-    .small.reject  { background: #fff; color: var(--bad); border: 1px solid var(--bad); }
-    .small.clear   { background: #fff; color: #111827; border: 1px solid var(--border); }
-
-    .toast {
+    .toast{
       margin-top: 10px;
       font-size: 13px;
       color: var(--muted);
       line-height: 1.5;
       white-space: pre-line;
+      min-height: 18px;
     }
 
-    /* Modal */
-    .modal-backdrop {
+    .toast.err{ color: var(--bad); }
+
+    /* Pending table */
+    .table{
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+    }
+
+    .table th, .table td{
+      border-bottom: 1px solid var(--border);
+      padding: 10px 8px;
+      font-size: 13px;
+      vertical-align: middle;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .table th{
+      color: var(--muted);
+      font-weight: 900;
+      font-size: 12px;
+      background: #fff;
+    }
+
+    .table td.empty-row{
+      text-align: left !important;
+    }
+
+    .actions{
+      display:flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .small{
+      padding: 7px 10px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+    }
+
+    .small.approve{ background: var(--good); color: #fff; border-color: var(--good); }
+    .small.reject { background: #fff; color: var(--bad); border-color: var(--bad); }
+    .small.clear  { background: #fff; color: var(--text); }
+
+    /* =========================
+       Transfer image viewer (full-screen UI)
+       ========================= */
+    .img-viewer-backdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      z-index: 10000;
+    }
+    .img-viewer-backdrop.show{ display:flex; }
+
+    .img-viewer{
+      position: relative;
+      width: min(1100px, 100%);
+      height: min(90vh, 900px);
+      background: rgba(0,0,0,0.92);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 30px 70px rgba(0,0,0,0.35);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .img-viewer img{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display:block;
+      background:#000;
+    }
+
+    .img-viewer-close{
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      font-size: 22px;
+      font-weight: 900;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .img-viewer-close:hover{ background: rgba(0,0,0,0.75); }
+
+    /* =========================
+       Assign modals (UI 입력)
+       ✅ 핵심: 기본은 display:none, show일 때만 표시
+       ========================= */
+    .modal-backdrop{
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.35);
-      display: flex;
+      display: none; /* ✅ 기본은 무조건 숨김 */
       align-items: center;
       justify-content: center;
       padding: 16px;
       z-index: 9999;
     }
+    .modal-backdrop.show{ display:flex; } /* ✅ show일 때만 켜짐 */
 
-    .modal-backdrop.hidden { display: none; }
-
-    .modal {
+    .modal{
       width: min(520px, 100%);
       background: var(--card);
       border: 1px solid var(--border);
@@ -251,38 +288,39 @@
       padding: 16px;
     }
 
-    .modal-title {
+    .modal-title{
       font-size: 15px;
       font-weight: 900;
       margin: 0 0 8px;
     }
 
-    .modal-body {
+    .modal-body{
       color: var(--text);
       font-size: 13px;
       line-height: 1.5;
-      margin-bottom: 4px;
+      margin-bottom: 8px;
       white-space: pre-line;
     }
 
-    .modal-actions {
-      display: flex;
+    .modal-actions{
+      display:flex;
       justify-content: flex-end;
       gap: 8px;
       flex-wrap: wrap;
     }
 
-    .form-row { margin-bottom: 2px; }
+    .form-row{ margin-bottom: 10px; }
 
-    .label {
-      display: block;
+    .label{
+      display:block;
       font-size: 12px;
       color: var(--muted);
-      font-weight: 800;
-      margin-bottom: 2px;
+      font-weight: 900;
+      margin-bottom: 4px;
+      text-align: left;
     }
 
-    .input {
+    .input{
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -291,26 +329,24 @@
       outline: none;
       background: #fff;
     }
+    .input:focus{ border-color: rgba(17,24,39,0.35); }
 
-    .input:focus { border-color: rgba(17,24,39,0.35); }
-
-    /* Assign modal spacing tweak (assign form only) */
+    /* assign form compact */
     #assignFormBackdrop .modal { padding: 12px !important; }
     #assignFormBackdrop .modal-title { margin: 0 0 6px !important; }
     #assignFormBackdrop .modal-body { margin-bottom: 6px !important; line-height: 1.2 !important; }
-    #assignFormBackdrop .form-row { margin-bottom: 6px !important; }
-    #assignFormBackdrop .form-row:last-child { margin-bottom: 0 !important; }
-    #assignFormBackdrop .label { margin: 0 0 2px 0 !important; }
-    #assignFormBackdrop .input { padding: 7px 10px !important; }
-    #assignFormBackdrop .modal-actions { padding-top: 6px !important; }
+    #assignFormBackdrop .form-row { margin-bottom: 8px !important; }
+    #assignFormBackdrop .input { padding: 8px 10px !important; }
   </style>
 </head>
+
 <body>
 <div class="wrap">
   <div class="topbar">
     <div class="title">관리자 페이지</div>
     <div class="top-actions">
       <button class="btn" onclick="goApproved()">사물함 이용 현황</button>
+      <button class="btn primary" onclick="refreshAll()">새로고침</button>
       <button class="btn danger" onclick="doLogout()">로그아웃</button>
     </div>
   </div>
@@ -319,9 +355,9 @@
     <div class="card">
       <h2>현재 사물함 현황</h2>
       <div class="legend">
-        <div class="chip"><span class="dot good"></span>AVAILABLE</div>
-        <div class="chip"><span class="dot warn"></span>PENDING</div>
-        <div class="chip"><span class="dot bad"></span>APPROVED</div>
+        <span><span class="dot good"></span>AVAILABLE</span>
+        <span><span class="dot warn"></span>PENDING</span>
+        <span><span class="dot bad"></span>APPROVED</span>
       </div>
 
       <div id="lockerGrid" class="locker-grid"></div>
@@ -329,13 +365,7 @@
     </div>
 
     <div class="card">
-      <div class="card-head">
-        <h2>신청 대기 목록</h2>
-        <div class="head-actions">
-          <button class="btn primary" onclick="refreshAll()">새로고침</button>
-          <button class="btn" onclick="resetAll()">전체 초기화</button>
-        </div>
-      </div>
+      <h2>신청 대기 목록</h2>
 
       <table class="table">
         <thead>
@@ -344,11 +374,12 @@
           <th>학번</th>
           <th>이름</th>
           <th>전화번호</th>
+          <th>보증금 입금</th>
           <th>처리</th>
         </tr>
         </thead>
         <tbody id="pendingBody">
-        <tr><td colspan="5" style="color:var(--muted); padding:14px 8px;">불러오는 중...</td></tr>
+        <tr><td colspan="6" style="color:var(--muted); padding:14px 8px;">불러오는 중...</td></tr>
         </tbody>
       </table>
 
@@ -357,8 +388,8 @@
   </div>
 </div>
 
-<!-- Admin assign modals (1세트만 유지) -->
-<div id="assignConfirmBackdrop" class="modal-backdrop hidden" aria-hidden="true">
+<!-- ✅ 사용자 지정 확인 모달 -->
+<div id="assignConfirmBackdrop" class="modal-backdrop" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true">
     <div class="modal-title">사용자 지정</div>
     <div class="modal-body" id="assignConfirmText"></div>
@@ -369,9 +400,10 @@
   </div>
 </div>
 
-<div id="assignFormBackdrop" class="modal-backdrop hidden" aria-hidden="true">
+<!-- ✅ 사용자 정보 입력 모달 -->
+<div id="assignFormBackdrop" class="modal-backdrop" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true">
-    <div class="modal-title" id="assignFormTitle">사용자 정보 입력</div>
+    <div class="modal-title" id="assignFormTitle">사물함 사용자 정보 입력</div>
     <div class="modal-body">
       <div class="form-row">
         <label class="label" for="assignStudentId">학번</label>
@@ -393,8 +425,18 @@
   </div>
 </div>
 
+<!-- ✅ 송금 이미지 뷰어 -->
+<div id="transferImgBackdrop" class="img-viewer-backdrop" aria-hidden="true">
+  <div class="img-viewer" role="dialog" aria-modal="true" aria-label="송금 이미지">
+    <button type="button" class="img-viewer-close" id="transferImgClose" aria-label="닫기">×</button>
+    <img id="transferImg" alt="송금(보증금 입금) 이미지" />
+  </div>
+</div>
+
 <script>
-  // Navigation
+  // -----------------------
+  // Navigation / Logout
+  // -----------------------
   function goApproved() { location.href = "/admin-approved.html"; }
 
   function doLogout() {
@@ -402,9 +444,11 @@
             .finally(() => location.href = "/login.html");
   }
 
+  // -----------------------
   // Fetch helper
+  // -----------------------
   async function api(url, options) {
-    const res = await fetch(url, options);
+    const res = await fetch(url, { credentials: "same-origin", ...options });
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(text || ("HTTP " + res.status));
@@ -414,112 +458,179 @@
     return res.text();
   }
 
-  function setMsg(text) {
-    document.getElementById("msg").textContent = text || "";
+  function setMsg(text, isErr=false) {
+    const el = document.getElementById("msg");
+    el.className = "toast" + (isErr ? " err" : "");
+    el.textContent = text || "";
   }
 
-  // Admin Assign (AVAILABLE -> APPROVED)
+  function escapeHtml(str) {
+    return String(str ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+  }
+
+  // -----------------------
+  // Transfer image viewer
+  // -----------------------
+  let _transferObjectUrl = null;
+
+  async function openTransferImage(applicationId) {
+    const backdrop = document.getElementById("transferImgBackdrop");
+    const img = document.getElementById("transferImg");
+
+    if (_transferObjectUrl) {
+      URL.revokeObjectURL(_transferObjectUrl);
+      _transferObjectUrl = null;
+    }
+    img.removeAttribute("src");
+
+    const res = await fetch(`/api/admin/pending/${applicationId}/transfer-image`, {
+      method: "GET",
+      cache: "no-store",
+      credentials: "same-origin"
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(() => "");
+      throw new Error(t || ("HTTP " + res.status));
+    }
+    const blob = await res.blob();
+    _transferObjectUrl = URL.createObjectURL(blob);
+    img.src = _transferObjectUrl;
+
+    backdrop.classList.add("show");
+    backdrop.setAttribute("aria-hidden", "false");
+  }
+
+  function closeTransferImage() {
+    const backdrop = document.getElementById("transferImgBackdrop");
+    const img = document.getElementById("transferImg");
+
+    backdrop.classList.remove("show");
+    backdrop.setAttribute("aria-hidden", "true");
+
+    if (_transferObjectUrl) {
+      URL.revokeObjectURL(_transferObjectUrl);
+      _transferObjectUrl = null;
+    }
+    img.removeAttribute("src");
+  }
+
+  document.getElementById("transferImgClose").addEventListener("click", closeTransferImage);
+  document.getElementById("transferImgBackdrop").addEventListener("click", (e) => {
+    if (e.target.id === "transferImgBackdrop") closeTransferImage();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeTransferImage();
+      closeAssignConfirm();
+      closeAssignForm();
+    }
+  });
+
+  // -----------------------
+  // Assign modals logic
+  // -----------------------
   let _selectedLockerNo = null;
-
-  function _show(el) {
-    el.classList.remove("hidden");
-    el.setAttribute("aria-hidden", "false");
-  }
-
-  function _hide(el) {
-    el.classList.add("hidden");
-    el.setAttribute("aria-hidden", "true");
-  }
 
   function openAssignConfirm(lockerNo) {
     _selectedLockerNo = lockerNo;
     document.getElementById("assignConfirmText").textContent =
             `${lockerNo}번 사물함에 사용자를 지정하시겠습니까?`;
-    _show(document.getElementById("assignConfirmBackdrop"));
+
+    const el = document.getElementById("assignConfirmBackdrop");
+    el.classList.add("show");
+    el.setAttribute("aria-hidden", "false");
   }
 
   function closeAssignConfirm() {
-    _hide(document.getElementById("assignConfirmBackdrop"));
+    const el = document.getElementById("assignConfirmBackdrop");
+    el.classList.remove("show");
+    el.setAttribute("aria-hidden", "true");
   }
 
   function openAssignForm() {
-    document.getElementById("assignFormTitle").textContent = "사물함 사용자 정보 입력";
+    document.getElementById("assignFormTitle").textContent =
+            `${_selectedLockerNo}번 사물함 사용자 정보 입력`;
 
     document.getElementById("assignStudentId").value = "";
     document.getElementById("assignName").value = "";
     document.getElementById("assignPhone").value = "";
 
-    _show(document.getElementById("assignFormBackdrop"));
+    const el = document.getElementById("assignFormBackdrop");
+    el.classList.add("show");
+    el.setAttribute("aria-hidden", "false");
+
     document.getElementById("assignStudentId").focus();
   }
 
   function closeAssignForm() {
-    _hide(document.getElementById("assignFormBackdrop"));
+    const el = document.getElementById("assignFormBackdrop");
+    el.classList.remove("show");
+    el.setAttribute("aria-hidden", "true");
   }
 
-  // Modal button bindings
-  document.getElementById("assignConfirmNo")
-          .addEventListener("click", closeAssignConfirm);
+  document.getElementById("assignConfirmNo").addEventListener("click", closeAssignConfirm);
+  document.getElementById("assignConfirmYes").addEventListener("click", () => {
+    closeAssignConfirm();
+    openAssignForm();
+  });
 
-  document.getElementById("assignConfirmYes")
-          .addEventListener("click", () => {
-            closeAssignConfirm();
-            openAssignForm();
-          });
+  document.getElementById("assignCancel").addEventListener("click", closeAssignForm);
 
-  document.getElementById("assignCancel")
-          .addEventListener("click", closeAssignForm);
+  document.getElementById("assignSubmit").addEventListener("click", async () => {
+    const studentId = document.getElementById("assignStudentId").value.trim();
+    const name = document.getElementById("assignName").value.trim();
+    const phone = document.getElementById("assignPhone").value.trim();
 
-  document.getElementById("assignSubmit")
-          .addEventListener("click", async () => {
-            const studentId = document.getElementById("assignStudentId").value.trim();
-            const name = document.getElementById("assignName").value.trim();
-            const phone = document.getElementById("assignPhone").value.trim();
+    if (!studentId || !name || !phone) {
+      alert("학번/이름/전화번호를 모두 입력해주세요.");
+      return;
+    }
+    if (!_selectedLockerNo) {
+      alert("사물함 번호가 선택되지 않았습니다.");
+      return;
+    }
 
-            if (!studentId || !name || !phone) {
-              alert("학번/이름/전화번호를 모두 입력해주세요.");
-              return;
-            }
+    if (!confirm(
+            `${_selectedLockerNo}번 사물함에\n학번: ${studentId}\n이름: ${name}\n전화: ${phone}\n\n이대로 지정할까요?`
+    )) return;
 
-            if (!_selectedLockerNo) {
-              alert("사물함 번호가 선택되지 않았습니다.");
-              return;
-            }
+    try {
+      const res = await api(`/api/admin/assign/${_selectedLockerNo}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentId, name, phone })
+      });
 
-            if (!confirm(
-                    `${_selectedLockerNo}번 사물함에\n학번: ${studentId}\n이름: ${name}\n전화: ${phone}\n\n이대로 지정할까요?`
-            )) return;
+      closeAssignForm();
+      setMsg(`${_selectedLockerNo}번 사용자 지정 완료`);
+      await refreshAll();
 
-            try {
-              const res = await api(`/api/admin/assign/${_selectedLockerNo}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ studentId, name, phone })
-              });
+      const code = (res && res.lookupCode) ? res.lookupCode : "";
+      if (code) {
+        alert(`지정이 완료되었습니다.\n\n사용자 조회 확인코드(토큰): ${code}\n\n이 코드는 사용자에게 1회 전달하세요.`);
+      }
+    } catch (e) {
+      alert("지정 실패: " + (e?.message || e));
+    }
+  });
 
-              closeAssignForm();
-              setMsg(`${_selectedLockerNo}번 사용자 지정 완료`);
-              await refreshAll();
+  // backdrop click to close
+  document.getElementById("assignConfirmBackdrop").addEventListener("click", (e) => {
+    if (e.target.id === "assignConfirmBackdrop") closeAssignConfirm();
+  });
+  document.getElementById("assignFormBackdrop").addEventListener("click", (e) => {
+    if (e.target.id === "assignFormBackdrop") closeAssignForm();
+  });
 
-              const code = (res && res.lookupCode) ? res.lookupCode : "";
-              alert(`지정이 완료되었습니다.\n\n사용자 조회 확인코드(토큰): ${code}\n\n이 코드는 사용자에게 1회 전달하세요.`);
-            } catch (e) {
-              alert("지정 실패: " + (e?.message || e));
-            }
-          });
-
-  // Click outside to close
-  document.getElementById("assignConfirmBackdrop")
-          .addEventListener("click", (e) => {
-            if (e.target.id === "assignConfirmBackdrop") closeAssignConfirm();
-          });
-
-  document.getElementById("assignFormBackdrop")
-          .addEventListener("click", (e) => {
-            if (e.target.id === "assignFormBackdrop") closeAssignForm();
-          });
-
-  // Display order: column-wise (1,6,11...) for 5 rows x 10 cols
+  // -----------------------
+  // Locker grid rendering + click actions
+  // -----------------------
   function buildDisplayOrder(rows = 5, cols = 10) {
     const order = [];
     for (let r = 1; r <= rows; r++) {
@@ -530,7 +641,6 @@
     return order;
   }
 
-  // Locker Grid
   function renderGrid(items) {
     const grid = document.getElementById("lockerGrid");
     grid.innerHTML = "";
@@ -539,18 +649,18 @@
     (items || []).forEach(x => map.set(Number(x.lockerNumber), x));
 
     let available = 0, pending = 0, approved = 0;
-
     const order = buildDisplayOrder(5, 10);
+
     order.forEach(num => {
       const it = map.get(num) || { lockerNumber: num, state: "AVAILABLE", studentId: null };
-
-      const div = document.createElement("div");
       const s = (it.state || it.status || "AVAILABLE").toUpperCase();
+
       const cls =
               (s === "APPROVED") ? "approved" :
                       (s === "PENDING" || s === "RESERVED") ? "pending" :
                               "available";
 
+      const div = document.createElement("div");
       div.className = "locker " + cls;
       div.textContent = num;
 
@@ -558,31 +668,23 @@
       else if (cls === "pending") pending++;
       else approved++;
 
-      // Approved locker: click to clear
+      // APPROVED 클릭 -> 비우기
       if (s === "APPROVED") {
         div.style.cursor = "pointer";
         div.title = "클릭하면 사물함을 비웁니다.";
-
         div.addEventListener("click", async () => {
           if (!confirm(`${num}번 사물함을 비우시겠습니까?`)) return;
-
           try {
-            const r = await fetch(`/api/admin/clear/${num}`, { method: "POST" });
-            if (!r.ok) {
-              const t = await r.text();
-              alert("비우기 실패: " + t);
-              return;
-            }
-
+            await api(`/api/admin/clear/${num}`, { method: "POST" });
             setMsg(`${num}번 비우기 완료`);
             await refreshAll();
           } catch (e) {
-            alert("비우기 실패: " + e);
+            setMsg("비우기 실패: " + (e?.message || e), true);
           }
         });
       }
 
-      // Available locker: click to assign user
+      // AVAILABLE 클릭 -> 사용자 지정(모달)
       if (s === "AVAILABLE") {
         div.style.cursor = "pointer";
         div.title = "클릭하면 사용자를 지정할 수 있습니다.";
@@ -594,22 +696,36 @@
 
     document.getElementById("lockerSummary").textContent =
             `신청 가능: ${available} / 승인 대기: ${pending} / 이용 중: ${approved}\n` +
-            `빨간색 사물함을 클릭하면 사물함을 비울 수 있습니다.`;
+            `빨간색 사물함은 클릭하면 비울 수 있습니다. 초록색 사물함은 클릭하면 사용자 지정이 가능합니다.`;
   }
 
   async function loadGrid() {
-    const items = await api("/api/public/lockers");
-    renderGrid(items);
+    try {
+      const items = await api("/api/public/lockers");
+      renderGrid(items);
+    } catch (e) {
+      const sum = document.getElementById("lockerSummary");
+      sum.className = "toast err";
+      sum.textContent = "사물함 현황 로드 실패: " + (e?.message || e);
+      console.error(e);
+    }
   }
 
+  // -----------------------
   // Pending list
+  // -----------------------
   function renderPending(list) {
     const body = document.getElementById("pendingBody");
     body.innerHTML = "";
 
     if (!list || list.length === 0) {
-      body.innerHTML =
-              `<tr><td colspan="5" style="color:var(--muted); padding:14px 8px;">대기 신청이 없습니다.</td></tr>`;
+      body.innerHTML = `
+        <tr>
+          <td class="empty-row" colspan="6" style="color:var(--muted); padding:14px 8px;">
+            대기 신청이 없습니다.
+          </td>
+        </tr>
+      `;
       return;
     }
 
@@ -621,9 +737,12 @@
         <td>${escapeHtml(row.name)}</td>
         <td>${escapeHtml(row.phone)}</td>
         <td>
+          <button class="small clear view-transfer" data-id="${row.id}">송금 확인</button>
+        </td>
+        <td>
           <div class="actions">
-            <button class="btn small approve" data-id="${row.id}">승인</button>
-            <button class="btn small reject" data-id="${row.id}">거절</button>
+            <button class="small approve" data-id="${row.id}">승인</button>
+            <button class="small reject" data-id="${row.id}">거절</button>
           </div>
         </td>
       `;
@@ -639,7 +758,7 @@
           setMsg("승인 완료");
           await refreshAll();
         } catch (e) {
-          setMsg("승인 실패: " + e.message);
+          setMsg("승인 실패: " + (e?.message || e), true);
         }
       });
     });
@@ -653,44 +772,48 @@
           setMsg("거절 완료");
           await refreshAll();
         } catch (e) {
-          setMsg("거절 실패: " + e.message);
+          setMsg("거절 실패: " + (e?.message || e), true);
+        }
+      });
+    });
+
+    body.querySelectorAll("button.view-transfer").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        try {
+          await openTransferImage(id);
+        } catch (e) {
+          setMsg("송금 이미지 로드 실패: " + (e?.message || e), true);
         }
       });
     });
   }
 
   async function loadPending() {
-    const list = await api("/api/admin/pending");
-    renderPending(list);
-  }
-
-  // Admin actions
-  async function resetAll() {
-    if (!confirm("모든 신청/승인을 초기화할까요?")) return;
     try {
-      await api("/api/admin/reset", { method: "POST" });
-      setMsg("초기화 완료");
-      await refreshAll();
+      const list = await api("/api/admin/pending");
+      renderPending(list);
     } catch (e) {
-      setMsg("초기화 실패: " + e.message);
+      setMsg("대기 목록 로드 실패: " + (e?.message || e), true);
     }
   }
 
+  // -----------------------
+  // Refresh
+  // -----------------------
   async function refreshAll() {
     setMsg("");
     await Promise.all([loadGrid(), loadPending()]);
   }
 
-  function escapeHtml(str) {
-    return String(str ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
-  }
+  // ✅ 혹시 남아있을지 모르는 레이어 강제 종료(안전장치)
+  window.addEventListener("load", () => {
+    closeAssignConfirm();
+    closeAssignForm();
+    closeTransferImage();
+  });
 
-  refreshAll().catch(e => setMsg("로딩 실패: " + e.message));
+  refreshAll().catch(e => setMsg("로딩 실패: " + (e?.message || e), true));
 </script>
 </body>
 </html>

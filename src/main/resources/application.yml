@@ -2,10 +2,16 @@ server:
   port: ${SERVER_PORT:8080}
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/lockerdb}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/lockerdb}
     username: ${SPRING_DATASOURCE_USERNAME:locker}
     password: ${SPRING_DATASOURCE_PASSWORD:lockerpass}
+
   jpa:
     hibernate:
       ddl-auto: update

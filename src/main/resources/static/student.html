@@ -311,17 +311,17 @@
                     class="modal-input"
                     type="text"
                     inputmode="numeric"
-                    placeholder="20244000"
+                    placeholder="20260303"
                     autocomplete="off"
             />
 
-            <label class="modal-label" for="studentIdModalCode">확인코드</label>
+            <label class="modal-label" for="studentIdModalCode">비밀번호</label>
             <input
                     id="studentIdModalCode"
                     class="modal-input"
                     type="text"
                     inputmode="numeric"
-                    placeholder="6자리 확인코드"
+                    placeholder="확인코드 혹은 재설정한 비밀번호"
                     autocomplete="off"
             />
 
@@ -365,15 +365,25 @@
             <div class="formRow">
                 <div>
                     <label for="studentId">학번</label>
-                    <input id="studentId" placeholder="20244000" />
+                    <input id="studentId" placeholder="20260303" />
                 </div>
                 <div>
                     <label for="name">이름</label>
-                    <input id="name" placeholder="강민선" />
+                    <input id="name" placeholder="김컴공" />
                 </div>
                 <div>
                     <label for="phone">전화번호</label>
                     <input id="phone" placeholder="01012345678" />
+                </div>
+            </div>
+
+            <div class="formRow" style="margin-top: 10px;">
+                <div style="width:100%">
+                    <label for="transferImage">보증금 송금 이미지</label>
+                    <input id="transferImage" type="file" accept="image/*" />
+                </div>
+                <div style="font-size:12px; color:var(--muted); margin-top:6px;">
+
                 </div>
             </div>
 
@@ -500,11 +510,30 @@
             return;
         }
 
+        const fileInput = document.getElementById("transferImage");
+        const file = fileInput?.files?.[0];
+        if (!file) {
+            alert("보증금 송금(입금) 이미지를 반드시 업로드해주세요.");
+            return;
+        }
+
+        const fd = new FormData();
+
+        // ✅ 컨트롤러가 @RequestPart("data")로 받으므로 JSON Blob으로 넣어야 함
+        fd.append("data", new Blob([JSON.stringify({
+            studentId,
+            name,
+            phone,
+            lockerNumber: selectedLocker
+        })], { type: "application/json" }));
+
+        fd.append("transferImage", file);
+
         const r = await fetch("/api/public/apply", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ studentId, name, phone, lockerNumber: selectedLocker })
+            body: fd
         });
+
 
         if (!r.ok) {
             const t = await r.text();
@@ -562,38 +591,34 @@
 
     async function submitLookup() {
         const studentId = (modalInput.value || "").trim();
-        const code = (modalCode.value || "").trim();
+        const password = (modalCode.value || "").trim();
 
         // 클라이언트 입력 검증
         if (!studentId) return showError("학번을 입력해야 조회할 수 있어요.");
         if (!/^\d+$/.test(studentId)) return showError("학번은 숫자만 입력해주세요.");
 
-        if (!code) return showError("확인코드를 입력해야 조회할 수 있어요.");
-        if (!/^\d{6}$/.test(code)) return showError("확인코드는 6자리 숫자입니다.");
+        if (!password) return showError("비밀번호를 입력해야 조회할 수 있어요.");
 
         // UI 상태
         setMyStatus("조회 중...");
         modalErr.style.display = "none";
         modalErr.textContent = "";
 
-        // 서버가 400 등 에러일 땐 text로 내려주는 경우가 있어서 text로 먼저 받음
-        const r = await fetch(
-            "/api/public/my-status?studentId=" + encodeURIComponent(studentId) +
-            "&code=" + encodeURIComponent(code)
-        );
+        const r = await fetch("/api/public/student/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ studentId, password })
+        });
 
         const raw = await r.text();
-
         if (!r.ok) {
-            showError(raw || "학번 또는 확인코드가 올바르지 않습니다.");
+            showError(raw || "학번 또는 비밀번호가 올바르지 않습니다.");
             setMyStatus("");
             return;
         }
 
         let data;
-        try {
-            data = JSON.parse(raw);
-        } catch (e) {
+        try { data = JSON.parse(raw); } catch (e) {
             showError("서버 응답 형식이 올바르지 않습니다.");
             setMyStatus("");
             return;
@@ -601,11 +626,11 @@
 
         closeModal();
 
-        // 승인 상태면 내 사물함 페이지로 이동
+        // 승인 상태면 내 사물함 페이지로 이동 (세션에 자격 저장)
         if (data.status === "APPROVED") {
-            window.location.href =
-                "/my-locker.html?studentId=" + encodeURIComponent(studentId) +
-                "&code=" + encodeURIComponent(code);
+            sessionStorage.setItem("locker_auth_studentId", studentId);
+            sessionStorage.setItem("locker_auth_password", password);
+            window.location.href = "/my-locker.html";
             return;
         }
 

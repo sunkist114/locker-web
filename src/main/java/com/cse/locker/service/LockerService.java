@@ -2,8 +2,10 @@ package com.cse.locker.service;
 
 import com.cse.locker.domain.Application;
 import com.cse.locker.domain.Locker;
+import com.cse.locker.domain.StudentAccount;
 import com.cse.locker.repo.ApplicationRepository;
 import com.cse.locker.repo.LockerRepository;
+import com.cse.locker.repo.StudentAccountRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,14 +23,51 @@ public class LockerService {
 
     private final LockerRepository lockerRepo;
     private final ApplicationRepository appRepo;
+    private final StudentAccountRepository studentAccountRepo;
     private final PasswordEncoder passwordEncoder;
 
     private final SecureRandom random = new SecureRandom();
 
-    public LockerService(LockerRepository lockerRepo, ApplicationRepository appRepo, PasswordEncoder passwordEncoder) {
+    public LockerService(LockerRepository lockerRepo,
+                         ApplicationRepository appRepo,
+                         StudentAccountRepository studentAccountRepo,
+                         PasswordEncoder passwordEncoder) {
         this.lockerRepo = lockerRepo;
         this.appRepo = appRepo;
+        this.studentAccountRepo = studentAccountRepo;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    private void ensureStudentAccount(String studentId, String passwordHash) {
+        if (studentId == null || studentId.isBlank()) return;
+        if (passwordHash == null || passwordHash.isBlank()) return;
+
+        // 이미 있으면 그대로 두고, 없으면 생성
+        studentAccountRepo.findById(studentId).orElseGet(() ->
+                studentAccountRepo.save(new StudentAccount(studentId, passwordHash))
+        );
+    }
+
+    private void deleteStudentAccount(String studentId) {
+        if (studentId == null || studentId.isBlank()) return;
+        studentAccountRepo.deleteById(studentId);
+    }
+
+    private void requireStudentAccountAuth(String studentId, String password) {
+        if (studentId == null || studentId.trim().isEmpty()) {
+            throw new IllegalArgumentException("학번이 비었습니다.");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            throw new IllegalArgumentException("비밀번호를 입력해주세요.");
+        }
+
+        StudentAccount acc = studentAccountRepo.findById(studentId.trim())
+                .orElseThrow(() -> new IllegalStateException("학번 또는 비밀번호가 올바르지 않습니다."));
+
+        boolean ok = passwordEncoder.matches(password.trim(), acc.getPasswordHash());
+        if (!ok) {
+            throw new IllegalStateException("학번 또는 비밀번호가 올바르지 않습니다.");
+        }
     }
 
     public record LockerDto(int lockerNumber, String state, String studentId) {}
@@ -158,6 +197,28 @@ public class LockerService {
     }
 
     @Transactional
+    public String applyWithTransferImage(
+            String studentId,
+            String name,
+            String phone,
+            int lockerNumber,
+            byte[] transferImageBytes,
+            String transferImageContentType,
+            String transferImageFilename
+    ) {
+        // 학생 신청 + 송금 이미지 업로드
+        String code = apply(studentId, name, phone, lockerNumber);
+
+        // 방금 저장된 최신 신청에 이미지 붙이기
+        Application app = appRepo.findTopByStudentIdOrderByIdDesc(studentId.trim())
+                .orElseThrow(() -> new IllegalStateException("신청 저장에 실패했습니다."));
+        app.setTransferImage(transferImageBytes, transferImageContentType, transferImageFilename);
+        appRepo.save(app);
+
+        return code;
+    }
+
+    @Transactional
     public String adminAssignApproved(String studentId, String name, String phone, int lockerNumber) {
         // 관리자 직권 승인: AVAILABLE 사물함에 사용자를 지정하고 즉시 APPROVED 처리
         studentId = studentId.trim();
@@ -179,6 +240,9 @@ public class LockerService {
         Application app = new Application(studentId, name, phone, lockerNumber, Application.Status.APPROVED);
         app.setLookupCodeHash(hash);
         appRepo.save(app);
+
+        // ✅ 승인 시 학생 계정 자동 생성 (아이디=학번, 비밀번호=확인코드)
+        ensureStudentAccount(studentId, hash);
 
         locker.setState(Locker.State.APPROVED);
         locker.setReservedStudentId(studentId);
@@ -222,10 +286,38 @@ public class LockerService {
         }
 
         app.setStatus(Application.Status.APPROVED);
+        // ✅ 승인 후 송금 이미지는 저장하지 않기: 즉시 폐기
+        app.clearTransferImage();
         appRepo.save(app);
+
+        // ✅ 승인 시 학생 계정 자동 생성 (아이디=학번, 비밀번호=확인코드)
+        // lookupCodeHash는 이미 BCrypt 해시로 저장되어 있으므로 그대로 사용
+        ensureStudentAccount(app.getStudentId(), app.getLookupCodeHash());
 
         locker.setState(Locker.State.APPROVED);
         lockerRepo.save(locker);
+    }
+
+    public record TransferImageDto(byte[] bytes, String contentType, String filename) {}
+
+    @Transactional(readOnly = true)
+    public TransferImageDto getTransferImage(long applicationId) {
+        Application app = appRepo.findById(applicationId)
+                .orElseThrow(() -> new IllegalArgumentException("없는 신청: " + applicationId));
+
+        if (app.getStatus() != Application.Status.PENDING) {
+            throw new IllegalStateException("대기(PENDING) 신청의 이미지만 확인할 수 있습니다.");
+        }
+
+        byte[] bytes = app.getTransferImage();
+        if (bytes == null || bytes.length == 0) {
+            throw new IllegalStateException("업로드된 송금 이미지가 없습니다.");
+        }
+
+        String ct = app.getTransferImageContentType();
+        if (ct == null || ct.isBlank()) ct = "application/octet-stream";
+
+        return new TransferImageDto(bytes, ct, app.getTransferImageFilename());
     }
 
     @Transactional
@@ -256,7 +348,16 @@ public class LockerService {
             throw new IllegalStateException("승인된 사물함만 비울 수 있습니다.");
         }
 
+        // ✅ 학생 계정 삭제
+        deleteStudentAccount(locker.getReservedStudentId());
+
+        // 계정도 같이 삭제 (반납/초기화 때 계정이 쌓이지 않도록)
+        String sid = locker.getReservedStudentId();
+        // ✅ 학생 계정도 함께 삭제
+        deleteStudentAccount(locker.getReservedStudentId());
+
         appRepo.deleteByLockerNumber(lockerNumber);
+        deleteStudentAccount(sid);
 
         locker.setState(Locker.State.AVAILABLE);
         locker.setReservedStudentId(null);
@@ -267,6 +368,14 @@ public class LockerService {
     public void resetAll() {
         // 관리자: 전체 초기화(신청 전체 삭제 + 모든 사물함 AVAILABLE)
         appRepo.deleteAll();
+        studentAccountRepo.deleteAll();
+
+        // ✅ 학생 계정도 전체 삭제
+        studentAccountRepo.deleteAll();
+
+        // ✅ 학생 계정도 전체 삭제
+        studentAccountRepo.deleteAll();
+        studentAccountRepo.deleteAll();
 
         for (int i = LOCKER_MIN; i <= LOCKER_MAX; i++) {
             final int n = i;
@@ -361,9 +470,137 @@ public class LockerService {
         }
 
         appRepo.delete(app);
+        // ✅ 반납 시 학생 계정 삭제(계정이 쌓이지 않도록)
+        deleteStudentAccount(studentId);
 
         locker.setState(Locker.State.AVAILABLE);
         locker.setReservedStudentId(null);
         lockerRepo.save(locker);
+    }
+
+    // =====================================================
+    // 학생 계정 기반 기능
+    // =====================================================
+
+    public record StudentLoginDto(String status, String message, Integer lockerNumber) {}
+
+    @Transactional(readOnly = true)
+    public StudentLoginDto studentLogin(String studentId, String password) {
+        // 승인 시 자동 생성된 계정으로 로그인
+        requireStudentAccountAuth(studentId, password);
+
+        var opt = appRepo.findTopByStudentIdOrderByIdDesc(studentId.trim());
+        if (opt.isEmpty()) {
+            return new StudentLoginDto("NONE", "현재 사용 중인 사물함이 없습니다.", null);
+        }
+
+        Application app = opt.get();
+        Locker locker = lockerRepo.findById(app.getLockerNumber()).orElse(null);
+        if (locker == null || locker.getState() == Locker.State.AVAILABLE) {
+            return new StudentLoginDto("NONE", "현재 사용 중인 사물함이 없습니다.", null);
+        }
+
+        if (app.getStatus() != Application.Status.APPROVED) {
+            return new StudentLoginDto("PENDING", "신청이 접수되었습니다. 관리자 승인을 기다려주세요.", app.getLockerNumber());
+        }
+
+        return new StudentLoginDto("APPROVED", "승인되어 사용 중입니다.", app.getLockerNumber());
+    }
+
+    @Transactional(readOnly = true)
+    public MyLockerDto getMyLockerByAccount(String studentId, String password) {
+        requireStudentAccountAuth(studentId, password);
+
+        var opt = appRepo.findTopByStudentIdOrderByIdDesc(studentId.trim());
+        if (opt.isEmpty()) {
+            return new MyLockerDto("NONE", "현재 사용 중인 사물함이 없습니다.", studentId, null, null, null, null);
+        }
+        Application app = opt.get();
+
+        if (app.getStatus() != Application.Status.APPROVED) {
+            if (app.getStatus() == Application.Status.PENDING) {
+                return new MyLockerDto(
+                        "PENDING",
+                        "신청이 접수되었습니다. 관리자 승인을 기다려주세요.",
+                        studentId,
+                        null,
+                        null,
+                        app.getLockerNumber(),
+                        null
+                );
+            }
+            return new MyLockerDto("NONE", "현재 사용 중인 사물함이 없습니다.", studentId, null, null, null, null);
+        }
+
+        return new MyLockerDto(
+                "APPROVED",
+                "승인되어 사용 중입니다.",
+                app.getStudentId(),
+                app.getName(),
+                app.getPhone(),
+                app.getLockerNumber(),
+                app.getMemo()
+        );
+    }
+
+    @Transactional
+    public void saveMyMemoByAccount(String studentId, String password, String memo) {
+        requireStudentAccountAuth(studentId, password);
+
+        Application app = appRepo.findTopByStudentIdOrderByIdDesc(studentId.trim())
+                .orElseThrow(() -> new IllegalStateException("현재 사용 중인 사물함이 없습니다."));
+
+        if (app.getStatus() != Application.Status.APPROVED) {
+            throw new IllegalStateException("승인된 사물함이 없습니다.");
+        }
+
+        Locker locker = lockerRepo.findById(app.getLockerNumber())
+                .orElseThrow(() -> new IllegalArgumentException("없는 사물함: " + app.getLockerNumber()));
+
+        if (locker.getState() != Locker.State.APPROVED || !studentId.equals(locker.getReservedStudentId())) {
+            throw new IllegalStateException("현재 사용 중인 사물함이 아닙니다.");
+        }
+
+        app.setMemo(memo == null ? "" : memo);
+        appRepo.save(app);
+    }
+
+    @Transactional
+    public void emptyMyLockerByAccount(String studentId, String password) {
+        requireStudentAccountAuth(studentId, password);
+
+        Application app = appRepo.findTopByStudentIdOrderByIdDesc(studentId.trim())
+                .orElseThrow(() -> new IllegalStateException("승인된 사물함이 없습니다."));
+
+        if (app.getStatus() != Application.Status.APPROVED) {
+            throw new IllegalStateException("승인된 사물함이 없습니다.");
+        }
+
+        Locker locker = lockerRepo.findById(app.getLockerNumber())
+                .orElseThrow(() -> new IllegalArgumentException("없는 사물함: " + app.getLockerNumber()));
+
+        if (locker.getState() != Locker.State.APPROVED || !studentId.equals(locker.getReservedStudentId())) {
+            throw new IllegalStateException("현재 사용 중인 사물함이 아닙니다.");
+        }
+
+        appRepo.delete(app);
+        deleteStudentAccount(studentId);
+
+        locker.setState(Locker.State.AVAILABLE);
+        locker.setReservedStudentId(null);
+        lockerRepo.save(locker);
+    }
+
+    @Transactional
+    public void changeStudentPassword(String studentId, String currentPassword, String newPassword) {
+        requireStudentAccountAuth(studentId, currentPassword);
+        if (newPassword == null || newPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("새 비밀번호를 입력해주세요.");
+        }
+
+        StudentAccount acc = studentAccountRepo.findById(studentId.trim())
+                .orElseThrow(() -> new IllegalStateException("학번 또는 비밀번호가 올바르지 않습니다."));
+        acc.setPasswordHash(passwordEncoder.encode(newPassword.trim()));
+        studentAccountRepo.save(acc);
     }
 }

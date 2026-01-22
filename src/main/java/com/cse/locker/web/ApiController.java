@@ -1,9 +1,12 @@
 package com.cse.locker.web;
 
 import com.cse.locker.service.LockerService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -25,22 +28,46 @@ public class ApiController {
 
     @GetMapping("/api/public/lockers")
     public List<LockerService.LockerDto> lockers() {
-        // 사물함 전체 상태 조회
         return service.getLockerGrid();
     }
 
     public record ApplyReq(String studentId, String name, String phone, int lockerNumber) {}
     public record ApplyRes(String lookupCode) {}
 
-    @PostMapping("/api/public/apply")
-    public ResponseEntity<?> apply(@RequestBody ApplyReq req) {
-        // 사물함 신청 + 확인코드 발급
-        String code = service.apply(
+    /**
+     * ✅ 학생 신청 + 송금(보증금) 이미지 업로드 (최종)
+     * - consumes: multipart/form-data
+     * - data(JSON) + transferImage(file)
+     */
+    @PostMapping(value = "/api/public/apply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> apply(
+            @RequestPart("data") ApplyReq req,
+            @RequestPart("transferImage") MultipartFile transferImage
+    ) throws Exception {
+
+        if (req == null) {
+            return ResponseEntity.badRequest().body("신청 정보가 비어있습니다.");
+        }
+
+        if (transferImage == null || transferImage.isEmpty()) {
+            return ResponseEntity.badRequest().body("송금(입금) 이미지 파일을 업로드해주세요.");
+        }
+
+        String ct = transferImage.getContentType();
+        if (ct == null || !ct.toLowerCase().startsWith("image/")) {
+            return ResponseEntity.badRequest().body("이미지 파일만 업로드할 수 있습니다.");
+        }
+
+        String code = service.applyWithTransferImage(
                 req.studentId().trim(),
                 req.name().trim(),
                 req.phone().trim(),
-                req.lockerNumber()
+                req.lockerNumber(),
+                transferImage.getBytes(),
+                ct,
+                transferImage.getOriginalFilename()
         );
+
         sse.broadcast("changed");
         return ResponseEntity.ok(new ApplyRes(code));
     }
@@ -50,7 +77,6 @@ public class ApiController {
             @RequestParam String studentId,
             @RequestParam String code
     ) {
-        // 학번 + 확인코드로 현재 상태 조회
         return service.getMyStatus(studentId.trim(), code.trim());
     }
 
@@ -60,13 +86,27 @@ public class ApiController {
 
     @GetMapping("/api/admin/pending")
     public List<LockerService.PendingDto> pending() {
-        // 대기(PENDING) 신청 목록 조회
         return service.getPendingList();
+    }
+
+    /**
+     * ✅ 관리자: 송금 이미지 확인 (관리자 페이지 모달에서 <img>로 띄움)
+     */
+    @GetMapping("/api/admin/pending/{applicationId}/transfer-image")
+    public ResponseEntity<byte[]> transferImage(@PathVariable long applicationId) {
+        LockerService.TransferImageDto dto = service.getTransferImage(applicationId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(dto.contentType()));
+        headers.setCacheControl("no-store");
+        headers.set("Content-Disposition",
+                "inline; filename=\"" + (dto.filename() == null ? "transfer-image" : dto.filename().replace("\"", "")) + "\"");
+
+        return ResponseEntity.ok().headers(headers).body(dto.bytes());
     }
 
     @PostMapping("/api/admin/approve/{applicationId}")
     public ResponseEntity<?> approve(@PathVariable long applicationId) {
-        // 신청 승인
         service.approve(applicationId);
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
@@ -74,7 +114,6 @@ public class ApiController {
 
     @PostMapping("/api/admin/reject/{applicationId}")
     public ResponseEntity<?> reject(@PathVariable long applicationId) {
-        // 신청 반려
         service.reject(applicationId);
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
@@ -82,7 +121,6 @@ public class ApiController {
 
     @PostMapping("/api/admin/clear/{lockerNumber}")
     public ResponseEntity<?> clear(@PathVariable int lockerNumber) {
-        // 승인된 사물함 비우기
         service.clearApprovedLocker(lockerNumber);
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
@@ -90,7 +128,6 @@ public class ApiController {
 
     @PostMapping("/api/admin/reset")
     public ResponseEntity<?> reset() {
-        // 전체 초기화
         service.resetAll();
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
@@ -104,7 +141,6 @@ public class ApiController {
             @PathVariable int lockerNumber,
             @RequestBody AdminAssignReq req
     ) {
-        // 관리자 직접 지정 후 즉시 승인
         String code = service.adminAssignApproved(
                 req.studentId().trim(),
                 req.name().trim(),
@@ -119,20 +155,49 @@ public class ApiController {
     // Public: My Locker
     // -----------------------
 
+    // ✅ 학생 계정 로그인(자동 생성 계정)
+    public record StudentLoginReq(String studentId, String password) {}
+
+    @PostMapping("/api/public/student/login")
+    public LockerService.StudentLoginDto studentLogin(@RequestBody StudentLoginReq req) {
+        return service.studentLogin(req.studentId().trim(), req.password().trim());
+    }
+
+    // ✅ 학생 계정 비밀번호 변경
+    public record StudentChangePwReq(String studentId, String currentPassword, String newPassword) {}
+
+    @PostMapping("/api/public/student/change-password")
+    public ResponseEntity<?> changeStudentPassword(@RequestBody StudentChangePwReq req) {
+        service.changeStudentPassword(
+                req.studentId().trim(),
+                req.currentPassword().trim(),
+                req.newPassword().trim()
+        );
+        return ResponseEntity.ok().build();
+    }
+
+    // ✅ 학생 계정 기반 "내 사물함 정보" 조회
+    public record MyLockerByAccountReq(String studentId, String password) {}
+
+    @PostMapping("/api/public/my-locker/by-account")
+    public LockerService.MyLockerDto myLockerByAccount(@RequestBody MyLockerByAccountReq req) {
+        return service.getMyLockerByAccount(req.studentId().trim(), req.password().trim());
+    }
+
     @GetMapping("/api/public/my-locker")
     public LockerService.MyLockerDto myLocker(
             @RequestParam String studentId,
             @RequestParam String code
     ) {
-        // 내 사물함 정보 조회
         return service.getMyLocker(studentId.trim(), code.trim());
     }
 
     public record SaveMemoReq(String studentId, String code, String memo) {}
 
+    public record SaveMemoByAccountReq(String studentId, String password, String memo) {}
+
     @PostMapping("/api/public/my-locker/memo")
     public ResponseEntity<?> saveMemo(@RequestBody SaveMemoReq req) {
-        // 사물함 메모 저장
         service.saveMyMemo(
                 req.studentId().trim(),
                 req.code().trim(),
@@ -141,12 +206,30 @@ public class ApiController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/api/public/my-locker/memo/by-account")
+    public ResponseEntity<?> saveMemoByAccount(@RequestBody SaveMemoByAccountReq req) {
+        service.saveMyMemoByAccount(
+                req.studentId().trim(),
+                req.password().trim(),
+                req.memo()
+        );
+        return ResponseEntity.ok().build();
+    }
+
     public record EmptyReq(String studentId, String code) {}
+
+    public record EmptyByAccountReq(String studentId, String password) {}
 
     @PostMapping("/api/public/my-locker/empty")
     public ResponseEntity<?> empty(@RequestBody EmptyReq req) {
-        // 사물함 반납
         service.emptyMyLocker(req.studentId().trim(), req.code().trim());
+        sse.broadcast("changed");
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/api/public/my-locker/empty/by-account")
+    public ResponseEntity<?> emptyByAccount(@RequestBody EmptyByAccountReq req) {
+        service.emptyMyLockerByAccount(req.studentId().trim(), req.password().trim());
         sse.broadcast("changed");
         return ResponseEntity.ok().build();
     }
