@@ -93,11 +93,6 @@ public class KakaoOAuthController {
             form.add("client_secret", clientSecret.trim());
         }
 
-        // ===== DEBUG (2) token 요청 파라미터 확인 =====
-        System.out.println("[TOKEN REQ] client_id(head)=" + mask(restKey));
-        System.out.println("[TOKEN REQ] redirect_uri=" + redirectUri);
-        System.out.println("[TOKEN REQ] has_client_secret=" + (clientSecret != null && !clientSecret.isBlank()));
-
         ResponseEntity<Map> tokenRes;
         try {
             tokenRes = rest.postForEntity(tokenUrl, new HttpEntity<>(form, h), Map.class);
