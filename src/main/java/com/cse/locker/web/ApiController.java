@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Validated
@@ -31,45 +32,71 @@ public class ApiController {
         return service.getLockerGrid();
     }
 
+    // ✅ 카카오 연동 여부 확인
+    @GetMapping("/api/public/kakao-linked")
+    public ResponseEntity<?> kakaoLinked(@RequestParam String studentId) {
+        boolean linked = service.isKakaoLinked(studentId.trim());
+        return ResponseEntity.ok(Map.of("linked", linked));
+    }
+
     public record ApplyReq(String studentId, String name, String phone, int lockerNumber) {}
-    public record ApplyRes(String lookupCode) {}
 
     /**
-     * ✅ 학생 신청 + 송금(보증금) 이미지 업로드 (최종)
-     * - consumes: multipart/form-data
+     * ✅ 학생 신청 + 송금(보증금) 이미지 업로드 (multipart)
      * - data(JSON) + transferImage(file)
+     *
+     * ✅ 정책:
+     * 1) 카카오 연동이 되어있어야 신청 가능(409)
+     * 2) 신청 성공 시 "확인코드"는 발급되지 않음(승인 시점에 발급/발송)
+     * 3) 신청 성공 후 SSE broadcast
      */
     @PostMapping(value = "/api/public/apply", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> apply(
             @RequestPart("data") ApplyReq req,
             @RequestPart("transferImage") MultipartFile transferImage
-    ) throws Exception {
+    ) {
+        try {
+            if (req == null) return ResponseEntity.badRequest().body("신청 정보가 비어있습니다.");
+            if (transferImage == null || transferImage.isEmpty()) {
+                return ResponseEntity.badRequest().body("송금(입금) 이미지 파일을 업로드해주세요.");
+            }
 
-        if (req == null) {
-            return ResponseEntity.badRequest().body("신청 정보가 비어있습니다.");
+            String ct = transferImage.getContentType();
+            if (ct == null || !ct.toLowerCase().startsWith("image/")) {
+                return ResponseEntity.badRequest().body("이미지 파일만 업로드할 수 있습니다.");
+            }
+
+            // ✅ null/blank 방어
+            String sid = (req.studentId() == null) ? "" : req.studentId().trim();
+            String name = (req.name() == null) ? "" : req.name().trim();
+            String phone = (req.phone() == null) ? "" : req.phone().trim();
+
+            if (sid.isBlank() || name.isBlank() || phone.isBlank()) {
+                return ResponseEntity.badRequest().body("학번/이름/전화번호는 필수입니다.");
+            }
+
+            // ✅ 카카오 연동 선행 강제
+            if (!service.isKakaoLinked(sid)) {
+                return ResponseEntity.status(409).body("카카오 연동이 필요합니다. 신청하기를 다시 눌러 연동을 완료해주세요.");
+            }
+
+            // ✅ 신청 처리 (승인 시점에 확인코드 발급)
+            service.applyWithTransferImage(
+                    sid, name, phone, req.lockerNumber(),
+                    transferImage.getBytes(), ct, transferImage.getOriginalFilename()
+            );
+
+            // ✅ 그리드 갱신
+            sse.broadcast("changed");
+
+            // ✅ 코드 반환 X (승인 시점에 카톡으로 발급)
+            return ResponseEntity.ok(Map.of("ok", true));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            String msg = (e.getMessage() == null) ? e.getClass().getName() : e.getMessage();
+            return ResponseEntity.status(500).body(": " + msg);
         }
-
-        if (transferImage == null || transferImage.isEmpty()) {
-            return ResponseEntity.badRequest().body("송금(입금) 이미지 파일을 업로드해주세요.");
-        }
-
-        String ct = transferImage.getContentType();
-        if (ct == null || !ct.toLowerCase().startsWith("image/")) {
-            return ResponseEntity.badRequest().body("이미지 파일만 업로드할 수 있습니다.");
-        }
-
-        String code = service.applyWithTransferImage(
-                req.studentId().trim(),
-                req.name().trim(),
-                req.phone().trim(),
-                req.lockerNumber(),
-                transferImage.getBytes(),
-                ct,
-                transferImage.getOriginalFilename()
-        );
-
-        sse.broadcast("changed");
-        return ResponseEntity.ok(new ApplyRes(code));
     }
 
     @GetMapping("/api/public/my-status")
@@ -90,7 +117,7 @@ public class ApiController {
     }
 
     /**
-     * ✅ 관리자: 송금 이미지 확인 (관리자 페이지 모달에서 <img>로 띄움)
+     * ✅ 관리자: 송금 이미지 확인
      */
     @GetMapping("/api/admin/pending/{applicationId}/transfer-image")
     public ResponseEntity<byte[]> transferImage(@PathVariable long applicationId) {
@@ -152,10 +179,9 @@ public class ApiController {
     }
 
     // -----------------------
-    // Public: My Locker
+    // Public: My Locker (계정 기반)
     // -----------------------
 
-    // ✅ 학생 계정 로그인(자동 생성 계정)
     public record StudentLoginReq(String studentId, String password) {}
 
     @PostMapping("/api/public/student/login")
@@ -163,7 +189,6 @@ public class ApiController {
         return service.studentLogin(req.studentId().trim(), req.password().trim());
     }
 
-    // ✅ 학생 계정 비밀번호 변경
     public record StudentChangePwReq(String studentId, String currentPassword, String newPassword) {}
 
     @PostMapping("/api/public/student/change-password")
@@ -176,7 +201,6 @@ public class ApiController {
         return ResponseEntity.ok().build();
     }
 
-    // ✅ 학생 계정 기반 "내 사물함 정보" 조회
     public record MyLockerByAccountReq(String studentId, String password) {}
 
     @PostMapping("/api/public/my-locker/by-account")
@@ -193,7 +217,6 @@ public class ApiController {
     }
 
     public record SaveMemoReq(String studentId, String code, String memo) {}
-
     public record SaveMemoByAccountReq(String studentId, String password, String memo) {}
 
     @PostMapping("/api/public/my-locker/memo")
@@ -217,7 +240,6 @@ public class ApiController {
     }
 
     public record EmptyReq(String studentId, String code) {}
-
     public record EmptyByAccountReq(String studentId, String password) {}
 
     @PostMapping("/api/public/my-locker/empty")

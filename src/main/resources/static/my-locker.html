@@ -17,8 +17,6 @@
             --navy:#0f1f3a;
             --navy2:#142a4f;
 
-            --skyBorder:#93c5fd;
-
             --skyBtnBg:#eef6ff;
             --skyBtnBorder:#cfe2ff;
             --skyBtnText:#163a63;
@@ -123,7 +121,6 @@
             min-width:0;
         }
 
-        /* TOP 카드 (2열 고정) */
         .topCard{
             padding: clamp(12px, 2.2vw, 18px);
             display:grid;
@@ -190,10 +187,6 @@
             flex:0 0 auto;
         }
 
-        @media (max-width:380px){
-            .lockerSvg{ width:165px; }
-        }
-
         .infoLines{
             border:1px solid var(--border);
             border-radius:18px;
@@ -205,9 +198,10 @@
             min-width:0;
         }
 
+        /* ✅ 만료일 라인 추가로 4줄 */
         .linesFill{
             display:grid;
-            grid-template-rows: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
             height:100%;
             min-height:190px;
         }
@@ -251,7 +245,6 @@
             white-space:pre-wrap;
         }
 
-        /* Memo card */
         .memoCard{
             margin-top:16px;
             padding:18px;
@@ -470,7 +463,6 @@
             padding:0 2px;
         }
 
-        /* Empty locker modal */
         .modalOverlay{
             position:fixed;
             inset:0;
@@ -510,19 +502,6 @@
             letter-spacing:-.01em;
         }
 
-        .badgeWarn{
-            width:28px;
-            height:28px;
-            border-radius:10px;
-            background:rgba(147,197,253,.20);
-            border:1px solid rgba(147,197,253,.55);
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            color:#163a63;
-            font-weight:950;
-        }
-
         .iconBtn{
             width:34px;
             height:34px;
@@ -543,23 +522,9 @@
             margin:0 0 10px;
             display:inline-block;
             padding-bottom:4px;
-            border-bottom:2px solid rgba(147,197,253,.9); /* 하늘색 밑줄 */
+            border-bottom:2px solid rgba(147,197,253,.9);
         }
 
-        .refundLink{
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
-            padding:7px 10px;
-            border-radius:12px;
-            border:1px solid rgba(230,234,242,1);  /* 파란 느낌 줄이고 중립 보더 */
-            background:#fff;
-            color:#0f1f3a;
-            text-decoration:none;
-            font-weight:900;
-            font-size:12px;
-        }
-        .refundLink:hover{ background:#f8fafc; }
         .refundHint{
             margin-top:10px;
             font-size:11px;
@@ -568,11 +533,8 @@
             line-height:1.35;
         }
 
-        /* 보증금 반환 안내(모달) */
         .refundSteps{ display:flex; flex-direction:column; gap:10px; }
         .refundStep{ display:flex; gap:8px; align-items:flex-start; font-weight:800; color:var(--text); line-height:1.35; font-size:13px; }
-        .refundNum{ width:18px; flex:0 0 18px; color:#0f1f3a; }
-        .refundDividerLine{ height:1px; background:var(--border); margin:12px 0; }
 
         .refundNextRow{ display:flex; justify-content:flex-end; margin-top:10px; }
         .refundNextBtn{
@@ -630,58 +592,6 @@
 
         body.modalOpen{ overflow:hidden; }
 
-        /* 모바일 최적화 */
-        @media (max-width:600px){
-            .wrap{ margin:20px auto; padding:0 14px 64px; }
-            .headerLeft h1{ font-size:24px; }
-
-            .topCard{
-                padding:12px;
-                gap:12px;
-                grid-template-columns: 130px 1fr;
-            }
-
-            .topSide{
-                height:auto;
-                min-height:0;
-            }
-
-            .lockerBox{ padding:10px; border-radius:16px; }
-            .lockerSvg{ width:120px; }
-            .infoLines{ padding:10px 12px; border-radius:16px; }
-
-            .linesFill{
-                display:flex;
-                flex-direction:column;
-                gap:6px;
-                height:auto;
-                min-height:0;
-            }
-
-            .line{
-                padding:6px 6px;
-                font-size:14px;
-                gap:10px;
-            }
-
-            .label{
-                width:72px;
-                font-size:12px;
-            }
-
-            .value{
-                font-size:14px;
-                white-space:normal;
-                overflow:visible;
-                text-overflow:clip;
-                word-break:break-word;
-            }
-
-            .memoCard{ padding:14px; }
-            textarea{ min-height:140px; font-size:14px; }
-        }
-
-        /* ===== Guide Step (정돈 버전) ===== */
         .guideCard{
             border:1px solid var(--border);
             border-radius:16px;
@@ -696,39 +606,11 @@
             margin-bottom:12px;
         }
 
-        .refundTitle{
-            font-size:14px;
-            font-weight:950;
-            color:var(--text);
-            margin:0;
-            display:inline-block;
-            padding-bottom:6px;
-            border-bottom:2px solid rgba(147,197,253,.9);
-            width:fit-content;
-        }
-
         .guideSub{
             font-size:12px;
             font-weight:700;
             color:var(--muted);
             line-height:1.4;
-        }
-
-        .refundSteps{
-            display:flex;
-            flex-direction:column;
-            gap:10px;
-            margin-top:2px;
-        }
-
-        .refundStep{
-            display:flex;
-            gap:10px;
-            align-items:flex-start;
-            font-size:13px;
-            line-height:1.45;
-            font-weight:800;
-            color:var(--text);
         }
 
         .refundNum{
@@ -752,71 +634,9 @@
             min-width:0;
         }
 
-        .refundLinkRow{
-            margin-top:8px;
-        }
-
-        .refundLink{
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
-            padding:8px 12px;
-            border-radius:12px;
-            border:1px solid rgba(230,234,242,1);
-            background:#fff;
-            color:#0f1f3a;
-            text-decoration:none;
-            font-weight:900;
-            font-size:12px;
-        }
-        .refundLink:hover{
-            background:#f8fafc;
-            border-color:rgba(147,197,253,.55);
-        }
-
-        .guideDivider{
-            height:1px;
-            background:var(--border);
-            margin:12px 0 10px;
-        }
-
-        .refundNextRow{
-            display:flex;
-            justify-content:flex-end;
-        }
-
-        .refundNextBtn{
-            padding:9px 14px;
-            border-radius:12px;
-            border:1px solid var(--border);
-            background:#fff;
-            color:var(--text);
-            font-weight:950;
-            font-size:12px;
-            cursor:pointer;
-            box-shadow:0 7px 16px rgba(15,23,42,.06);
-        }
-        .refundNextBtn:hover{
-            background:#f8fafc;
-            transform:translateY(-1px);
-        }
-        .refundNextBtn:active{
-            transform:translateY(0px);
-            filter:brightness(.98);
-        }
-
-        .refundHint{
-            margin-top:10px;
-            font-size:11px;
-            color:var(--muted);
-            font-weight:700;
-            line-height:1.35;
-        }
-
         #emptyModalCode{
             margin-bottom: 8px;
         }
-
     </style>
 </head>
 
@@ -832,10 +652,8 @@
         </div>
     </div>
 
-    <!-- TOP 카드 -->
     <div class="card topCard">
         <div class="lockerBox topSide">
-            <!-- 사물함 SVG -->
             <svg class="lockerSvg" viewBox="0 0 320 240" aria-label="사물함">
                 <defs>
                     <linearGradient id="cab" x1="0" y1="0" x2="0" y2="1">
@@ -885,12 +703,17 @@
                     <div class="label">사물함 번호</div>
                     <div class="value"><span class="mono" id="vLockerNo">-</span>번</div>
                 </div>
+
+                <!-- ✅ 만료일 (요청사항: 사물함 번호 밑에 표시) -->
+                <div class="line">
+                    <div class="label">만료일</div>
+                    <div class="value mono" id="vExpireDate">-</div>
+                </div>
             </div>
             <div class="msg" id="topMsg"></div>
         </div>
     </div>
 
-    <!-- 기록 카드 -->
     <div class="card memoCard">
         <div class="memoHeader">
             <h2>사물함 기록</h2>
@@ -924,7 +747,6 @@
     </div>
 </div>
 
-<!-- 비우기 모달 -->
 <div class="modalOverlay" id="emptyModalOverlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="emptyModalTitle">
         <div class="modalHead">
@@ -932,35 +754,36 @@
             <button class="iconBtn" type="button" id="emptyModalClose" aria-label="닫기">✕</button>
         </div>
 
-        <!-- ✅ modalBody는 Step1 + Step2 둘 다 포함해야 함 -->
         <div class="modalBody">
 
-            <!-- Step 1: 안내 -->
             <div id="emptyStepGuide">
-                <!-- ✅ 박스(카드) -->
                 <div class="guideCard">
                     <div class="guideTop">
                         <div class="refundTitle">보증금 반환 방법</div>
-                        <div class="guideSub">※ 1번 완료 후 “다음”을 눌러주세요.</div>
+                        <div class="guideSub">※ 정해진 기간에 사물함 비우기를 진행해주세요.</div>
                     </div>
 
+                    <!-- ✅ (요청사항) 모달 디자인은 그대로, 절차 텍스트만 "기존"으로 원복 -->
                     <div class="refundSteps">
                         <div class="refundStep">
                             <div class="refundNum">1</div>
                             <div class="refundText">
-                                아래 링크에 접속하셔서 보증금 반환 정보를 작성해주세요.
-                                <div class="refundLinkRow">
-                                    <a class="refundLink" href="https://naver.me/xTsKeZgS" target="_blank" rel="noopener">
-                                        반환 정보 작성 페이지 ↗
-                                    </a>
-                                </div>
+                                보증금 반환을 위해 아래 네이버 폼에 접속해<br/>
+                                <span style="font-weight:950;">학생 정보와 환급받을 계좌번호</span>를 입력한 뒤 제출해주세요.
                             </div>
                         </div>
 
                         <div class="refundStep">
                             <div class="refundNum">2</div>
-                            <div class="refundText">다음 화면에서 학번과 비밀번호를 입력해주세요.</div>
+                            <div class="refundText">
+                                제출이 완료되면 <span style="font-weight:950;">“다음”</span>을 눌러 사물함 비우기 절차를 진행해주세요.
+                            </div>
                         </div>
+                    </div>
+
+                    <div class="refundHint">
+                        * 네이버 폼 링크:
+                        <a href="https://naver.me/xTsKeZgS" target="_blank" rel="noopener noreferrer">https://naver.me/xTsKeZgS</a>
                     </div>
                 </div>
 
@@ -969,25 +792,12 @@
                 </div>
             </div>
 
-            <!-- Step 2: 입력 (✅ 반드시 modalBody 안에 있어야 함) -->
             <div id="emptyStepForm" style="display:none;">
                 <div class="fieldLabel">학번</div>
-                <input
-                        class="input"
-                        id="emptyModalInput"
-                        placeholder="예: 20260303"
-                        autocomplete="off"
-                        inputmode="numeric"
-                />
+                <input class="input" id="emptyModalInput" placeholder="예: 20260303" autocomplete="off" inputmode="numeric"/>
 
                 <div class="fieldLabel">비밀번호</div>
-                <input
-                        class="input"
-                        id="emptyModalCode"
-                        placeholder="확인코드 혹은 재설정한 비밀번호"
-                        autocomplete="off"
-                        inputmode="numeric"
-                />
+                <input class="input" id="emptyModalCode" placeholder="비우기 확인코드 또는 재설정한 비밀번호" autocomplete="off" inputmode="numeric"/>
             </div>
 
         </div>
@@ -999,7 +809,6 @@
     </div>
 </div>
 
-<!-- 비밀번호 변경 모달 -->
 <div class="modalOverlay" id="pwModalOverlay" aria-hidden="true">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pwModalTitle">
         <div class="modalHead">
@@ -1012,7 +821,7 @@
             <input class="input" id="pwModalStudentId" placeholder="예: 20260303" autocomplete="off" inputmode="numeric" />
 
             <div class="fieldLabel">현재 비밀번호</div>
-            <input class="input" id="pwModalCurrent" placeholder="토큰(확인코드) 또는 현재 비밀번호" autocomplete="off" />
+            <input class="input" id="pwModalCurrent" placeholder="확인코드 또는 현재 비밀번호" autocomplete="off" />
 
             <div class="fieldLabel">새 비밀번호</div>
             <input class="input" id="pwModalNew" placeholder="새 비밀번호" autocomplete="off" />
@@ -1030,26 +839,15 @@
 <script>
     const el = (id) => document.getElementById(id);
 
-    function qsAny(keys) {
-        const u = new URL(window.location.href);
-        for (const k of keys) {
-            const v = (u.searchParams.get(k) || "").trim();
-            if (v) return v;
-        }
-        return "";
-    }
-
     const MARK_ITEMS = "----ITEMS----";
     const MARK_NOTE  = "----NOTE----";
 
-    // items + note를 하나의 memo 문자열로 합쳐 저장
     function serializeMemo(items, note) {
         const safeItems = (items || []).map(s => (s || "").trim()).filter(Boolean);
         const safeNote = (note || "");
         return `${MARK_ITEMS}\n${safeItems.map(x => `- ${x}`).join("\n")}\n${MARK_NOTE}\n${safeNote}`.trim();
     }
 
-    // 저장된 memo 문자열을 items/note로 다시 분리
     function parseMemo(raw) {
         const text = (raw || "").trim();
         if (!text) return { items: [], note: "" };
@@ -1222,7 +1020,6 @@
         document.querySelectorAll(".menu.open").forEach(m => m.classList.remove("open"));
     });
 
-    // ✅ 학생 계정 로그인 정보(sessionStorage)로 접근
     const studentId = (sessionStorage.getItem("locker_auth_studentId") || "").trim();
     const password = (sessionStorage.getItem("locker_auth_password") || "").trim();
 
@@ -1232,14 +1029,44 @@
     }
 
     function pickLockerNumber(data) {
-        const candidates = [
-            data?.lockerNumber, data?.lockerNo, data?.locker,
-            data?.locker_id, data?.lockerId, data?.locker_num, data?.lockerNum
-        ];
+        const candidates = [data?.lockerNumber, data?.lockerNo, data?.locker, data?.lockerId, data?.lockerNum];
         for (const c of candidates) {
             if (c !== undefined && c !== null && String(c).trim() !== "") return String(c);
         }
         return "-";
+    }
+
+    /* ✅ 만료일 파싱 (백엔드 필드명이 다를 수 있어서 후보를 넓게 처리) */
+    function pickExpireRaw(data) {
+        const candidates = [
+            data?.expiresAt, data?.expireAt, data?.expiryAt,
+            data?.expiresDate, data?.expireDate, data?.expiryDate,
+            data?.expiresOn, data?.expireOn
+        ];
+        for (const c of candidates) {
+            if (c !== undefined && c !== null && String(c).trim() !== "") return c;
+        }
+        return null;
+    }
+
+    function formatDateYMD(raw) {
+        if (!raw) return "-";
+        try {
+            // raw가 "2026-03-01" 같은 형태면 그대로 사용
+            const s = String(raw).trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+
+            // ISO / timestamp 모두 Date로 처리
+            const d = new Date(s);
+            if (isNaN(d.getTime())) return s;
+
+            const yy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, "0");
+            const dd = String(d.getDate()).padStart(2, "0");
+            return `${yy}-${mm}-${dd}`;
+        } catch (e) {
+            return String(raw);
+        }
     }
 
     async function load() {
@@ -1270,6 +1097,10 @@
         el("vStudentId").textContent = data.studentId || studentId;
         el("vName").textContent = data.name || "-";
         el("vLockerNo").textContent = pickLockerNumber(data);
+
+        // ✅ 만료일 표시
+        const expireRaw = pickExpireRaw(data);
+        el("vExpireDate").textContent = formatDateYMD(expireRaw);
 
         const parsed = parseMemo(data.memo || "");
         setItemsToUI(parsed.items);
@@ -1303,7 +1134,6 @@
         el("emptyModalInput").value = "";
         el("emptyModalCode").value = "";
 
-        // 항상 안내 화면부터 시작
         el("emptyStepGuide").style.display = "block";
         el("emptyStepForm").style.display = "none";
         el("emptyModalFoot").style.display = "none";
@@ -1331,7 +1161,6 @@
         if (!typed) { alert("학번을 입력해주세요."); return; }
         if (!/^\d+$/.test(typed)) { alert("학번은 숫자만 입력해주세요."); return; }
         if (typed !== studentId) { alert("학번이 일치하지 않습니다."); return; }
-
         if (!typedPw) { alert("비밀번호를 입력해주세요."); return; }
 
         el("emptyModalConfirm").disabled = true;
@@ -1371,19 +1200,6 @@
     el("emptyModalCancel").addEventListener("click", closeEmptyModal);
     el("emptyModalConfirm").addEventListener("click", runEmptyLocker);
 
-    el("emptyModalInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") runEmptyLocker();
-        if (e.key === "Escape") closeEmptyModal();
-    });
-    el("emptyModalCode").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") runEmptyLocker();
-        if (e.key === "Escape") closeEmptyModal();
-    });
-
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && el("emptyModalOverlay").classList.contains("open")) closeEmptyModal();
-    });
-
     // -----------------------
     // 비밀번호 변경
     // -----------------------
@@ -1405,15 +1221,14 @@
         el("pwModalOverlay").setAttribute("aria-hidden", "true");
     }
 
-    async function submitPwChange() {
+    async function runChangePw() {
         const sid = (el("pwModalStudentId").value || "").trim();
         const cur = (el("pwModalCurrent").value || "").trim();
-        const nw = (el("pwModalNew").value || "").trim();
+        const nw  = (el("pwModalNew").value || "").trim();
 
         if (!sid) { el("pwModalMsg").textContent = "학번을 입력해주세요."; return; }
-        if (sid !== studentId) { el("pwModalMsg").textContent = "학번이 일치하지 않습니다."; return; }
         if (!cur) { el("pwModalMsg").textContent = "현재 비밀번호를 입력해주세요."; return; }
-        if (!nw) { el("pwModalMsg").textContent = "새 비밀번호를 입력해주세요."; return; }
+        if (!nw)  { el("pwModalMsg").textContent = "새 비밀번호를 입력해주세요."; return; }
 
         el("pwModalMsg").textContent = "변경 중...";
 
@@ -1425,45 +1240,41 @@
 
         if (!r.ok) {
             const t = await r.text();
-            el("pwModalMsg").textContent = t || "변경 실패";
+            el("pwModalMsg").textContent = "실패: " + t;
             return;
         }
 
-        // 세션의 비밀번호도 갱신
+        el("pwModalMsg").textContent = "변경되었습니다.";
         sessionStorage.setItem("locker_auth_password", nw);
-        closePwModal();
-        alert("비밀번호가 변경되었습니다.");
+        setTimeout(() => closePwModal(), 650);
     }
 
-    el("changePwBtn").addEventListener("click", openPwModal);
     el("pwModalOverlay").addEventListener("click", (e) => {
         if (e.target === el("pwModalOverlay")) closePwModal();
     });
     el("pwModalClose").addEventListener("click", closePwModal);
     el("pwModalCancel").addEventListener("click", closePwModal);
-    el("pwModalConfirm").addEventListener("click", submitPwChange);
-    ["pwModalStudentId","pwModalCurrent","pwModalNew"].forEach((id) => {
-        el(id).addEventListener("keydown", (e) => {
-            if (e.key === "Enter") submitPwChange();
-            if (e.key === "Escape") closePwModal();
-        });
+    el("pwModalConfirm").addEventListener("click", runChangePw);
+
+    // -----------------------
+    // 버튼 연결
+    // -----------------------
+    el("saveBtn").addEventListener("click", saveAll);
+    el("addItemBtn").addEventListener("click", () => {
+        const list = el("itemList");
+        const next = buildItemRow("");
+        list.appendChild(next);
+        next.querySelector(".itemText").focus();
     });
 
-    function addItem() {
-        const list = el("itemList");
-        const li = buildItemRow("");
-        list.appendChild(li);
-        li.querySelector(".itemText").focus();
-
-        el("itemsMsg").textContent = "드래그해서 순서를 바꿀 수 있어요.";
-        setTimeout(() => (el("itemsMsg").textContent = ""), 1400);
-    }
-
-    el("saveBtn").addEventListener("click", saveAll);
     el("emptyBtnTop").addEventListener("click", openEmptyModal);
-    el("addItemBtn").addEventListener("click", addItem);
+    el("changePwBtn").addEventListener("click", openPwModal);
 
-    load();
+    load().catch(err => {
+        console.error(err);
+        alert("로딩 중 오류가 발생했습니다.");
+        window.location.replace("/student.html");
+    });
 </script>
 </body>
 </html>

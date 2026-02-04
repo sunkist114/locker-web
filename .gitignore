@@ -16,3 +16,4 @@ Thumbs.db
 
 # Secrets / config (DO NOT COMMIT)
 .env
+.aider*

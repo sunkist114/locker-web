@@ -100,28 +100,18 @@
             transform: none !important;
         }
 
-        /* 선택된 사물함: 강조를 '안쪽'으로 (주변 레이아웃/시각 영향 최소화) */
         .locker.selected{
             border-color: rgba(92, 124, 112, 0.55) !important;
-
-            /* 기존 box-shadow 제거 */
             box-shadow: none !important;
-
-            /* outline을 안쪽으로 당겨서 그리기 */
             outline: 2px solid rgba(92, 124, 112, 0.35);
             outline-offset: -2px;
-
             transform: none !important;
             filter: none !important;
         }
 
-
-        /* 선택된 사물함 hover도 과하지 않게 */
         .locker.available:hover{
             filter: brightness(0.99);
         }
-
-        /* 선택된 상태에서는 hover도 변화 최소화 */
         .locker.selected:hover{
             filter: none;
         }
@@ -227,11 +217,11 @@
         }
 
         .modal-body{
-            padding:10px 16px !important; /* 입력 간격 축소 */
+            padding:10px 16px !important;
         }
 
         .modal-desc{
-            margin:0 0 6px 0 !important; /* 문구 간격 축소 */
+            margin:0 0 6px 0 !important;
             color:var(--muted);
             font-size:13px;
         }
@@ -268,7 +258,7 @@
         .modal-actions{
             display:flex;
             gap:8px;
-            padding:10px 16px !important; /* 버튼 영역도 살짝 축소 */
+            padding:10px 16px !important;
             border-top:1px solid var(--border);
             justify-content:flex-end;
         }
@@ -286,7 +276,6 @@
             color:var(--btnText);
             border-color:var(--btn);
         }
-
     </style>
 </head>
 
@@ -315,13 +304,13 @@
                     autocomplete="off"
             />
 
-            <label class="modal-label" for="studentIdModalCode">비밀번호</label>
+            <label class="modal-label" for="studentIdModalCode">확인코드 / 비밀번호</label>
             <input
                     id="studentIdModalCode"
                     class="modal-input"
                     type="text"
                     inputmode="numeric"
-                    placeholder="확인코드 혹은 재설정한 비밀번호"
+                    placeholder="승인 후 받은 확인코드 or 변경한 비밀번호"
                     autocomplete="off"
             />
 
@@ -382,9 +371,6 @@
                     <label for="transferImage">보증금 송금 이미지</label>
                     <input id="transferImage" type="file" accept="image/*" />
                 </div>
-                <div style="font-size:12px; color:var(--muted); margin-top:6px;">
-
-                </div>
             </div>
 
             <button class="btn primary" id="applyBtn">신청하기</button>
@@ -400,8 +386,8 @@
     // State
     // =========================
     let selectedLocker = null;
+    let pendingFormData = null;
 
-    // "나의 사물함 조회" 결과 메시지 영역 표시/숨김
     function setMyStatus(msg) {
         const box = document.getElementById("myStatusBox");
         const text = (msg ?? "").toString().trim();
@@ -411,12 +397,10 @@
             box.style.display = "none";
             return;
         }
-
         box.textContent = text;
         box.style.display = "block";
     }
 
-    // ✅ 사물함 번호 표시 순서: "열 기준(1,6,11...)" (5행 x 10열)
     function buildDisplayOrder(rows = 5, cols = 10) {
         const order = [];
         for (let r = 1; r <= rows; r++) {
@@ -434,7 +418,6 @@
         const grid = document.getElementById("lockerGrid");
         grid.innerHTML = "";
 
-        // lockerNumber -> item 매핑
         const map = new Map();
         (items || []).forEach((x) => map.set(Number(x.lockerNumber), x));
 
@@ -454,7 +437,6 @@
             div.className = "locker " + cls;
             div.textContent = num;
 
-            // 학생 페이지: AVAILABLE만 선택 가능
             div.style.cursor = (cls === "available") ? "pointer" : "default";
             div.title = (cls === "available") ? "클릭해서 선택" : "선택 불가";
 
@@ -468,14 +450,10 @@
                     return;
                 }
 
-                // 이전 선택 표시 제거
                 document.querySelectorAll(".locker.selected").forEach(el => el.classList.remove("selected"));
-
-                // 현재 선택 표시
                 div.classList.add("selected");
 
                 selectedLocker = num;
-
                 document.getElementById('selectedText').textContent = '선택 사물함: ' + selectedLocker + '번';
             });
 
@@ -493,7 +471,7 @@
     }
 
     // =========================
-    // Apply
+    // Apply (연동 먼저 -> 신청)
     // =========================
     async function apply() {
         if (!selectedLocker) {
@@ -517,41 +495,27 @@
             return;
         }
 
+        // 1) 신청 FormData는 미리 만들어두고(전송 X)
         const fd = new FormData();
-
-        // ✅ 컨트롤러가 @RequestPart("data")로 받으므로 JSON Blob으로 넣어야 함
         fd.append("data", new Blob([JSON.stringify({
             studentId,
             name,
             phone,
             lockerNumber: selectedLocker
         })], { type: "application/json" }));
-
         fd.append("transferImage", file);
 
-        const r = await fetch("/api/public/apply", {
-            method: "POST",
-            body: fd
-        });
+        pendingFormData = fd;
 
+        // 2) 먼저 카카오 연동 팝업
+        const url = `/oauth/kakao/login?studentId=${encodeURIComponent(studentId)}&withTalk=1`;
+        const w = window.open(url, "KakaoLink", "width=520,height=720");
 
-        if (!r.ok) {
-            const t = await r.text();
-            alert("신청 실패: " + t);
+        if (!w) {
+            alert("팝업이 차단되었습니다. 브라우저에서 팝업 허용 후 다시 시도해주세요.");
+            pendingFormData = null;
             return;
         }
-
-        // ✅ 신청 성공 -> 확인코드 안내
-        const data = await r.json();
-        const code = data?.lookupCode;
-
-        alert(
-            `신청이 접수되었습니다.\n\n` +
-            `✅ 나의 사물함 조회 확인코드: ${code}\n` +
-            `(이 코드는 조회/메모/비우기에 필요합니다. 꼭 저장해 주세요!)`
-        );
-
-        await loadGrid();
     }
 
     // =========================
@@ -589,30 +553,25 @@
         modalErr.style.display = "block";
     }
 
+    // ✅ 확인코드 기반 조회: GET /api/public/my-status
     async function submitLookup() {
         const studentId = (modalInput.value || "").trim();
-        const password = (modalCode.value || "").trim();
+        const codeOrPw  = (modalCode.value || "").trim();
 
-        // 클라이언트 입력 검증
         if (!studentId) return showError("학번을 입력해야 조회할 수 있어요.");
         if (!/^\d+$/.test(studentId)) return showError("학번은 숫자만 입력해주세요.");
+        if (!codeOrPw) return showError("확인코드(또는 비밀번호)를 입력해야 조회할 수 있어요.");
 
-        if (!password) return showError("비밀번호를 입력해야 조회할 수 있어요.");
-
-        // UI 상태
         setMyStatus("조회 중...");
         modalErr.style.display = "none";
         modalErr.textContent = "";
 
-        const r = await fetch("/api/public/student/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ studentId, password })
-        });
+        const url = `/api/public/my-status?studentId=${encodeURIComponent(studentId)}&code=${encodeURIComponent(codeOrPw)}`;
+        const r = await fetch(url);
 
         const raw = await r.text();
         if (!r.ok) {
-            showError(raw || "학번 또는 비밀번호가 올바르지 않습니다.");
+            showError(raw || "학번 또는 확인코드가 올바르지 않습니다.");
             setMyStatus("");
             return;
         }
@@ -626,20 +585,24 @@
 
         closeModal();
 
-        // 승인 상태면 내 사물함 페이지로 이동 (세션에 자격 저장)
         if (data.status === "APPROVED") {
             sessionStorage.setItem("locker_auth_studentId", studentId);
-            sessionStorage.setItem("locker_auth_password", password);
+            sessionStorage.setItem("locker_auth_password", codeOrPw); // 확인코드 or 변경한 비번
             window.location.href = "/my-locker.html";
             return;
         }
 
-        // 승인 전/없음
-        if (data.status === "NONE") {
-            setMyStatus(data.message || "현재 사용 중인 사물함이 없습니다.");
-        } else {
-            setMyStatus(`${data.message} (사물함: ${data.lockerNumber}번 / 상태: ${data.status})`);
+        if (data.status === "PENDING") {
+            setMyStatus(data.message || "신청이 접수되었습니다. 관리자 승인 대기 중입니다.");
+            return;
         }
+
+        if (data.status === "NONE") {
+            setMyStatus(data.message || "신청 내역이 없습니다.");
+            return;
+        }
+
+        setMyStatus(`${data.message || "조회 결과"} (사물함: ${data.lockerNumber ?? "-"} / 상태: ${data.status})`);
     }
 
     // =========================
@@ -652,12 +615,10 @@
     btnClose.addEventListener("click", closeModal);
     btnOk.addEventListener("click", submitLookup);
 
-    // 모달 바깥 클릭 시 닫기
     modal.addEventListener("click", (e) => {
         if (e.target === modal) closeModal();
     });
 
-    // Enter/Escape 처리
     modalInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") submitLookup();
         if (e.key === "Escape") closeModal();
@@ -674,6 +635,55 @@
 
     // 초기 로딩
     loadGrid();
+
+    // ✅ 팝업(콜백)에서 연동 완료 메시지 받으면 -> 신청 전송
+    window.addEventListener("message", async (e) => {
+        if (!e?.data || e.data.type !== "KAKAO_LINKED") return;
+
+        const studentId = document.getElementById("studentId").value.trim();
+
+        // 안전장치: 서버에서 연동 여부 확인
+        try {
+            const chk = await fetch(`/api/public/kakao-linked?studentId=${encodeURIComponent(studentId)}`);
+            const chkJson = await chk.json();
+
+            if (!chkJson.linked) {
+                alert("카카오 연동이 확인되지 않았습니다. 다시 시도해주세요.");
+                pendingFormData = null;
+                return;
+            }
+        } catch (err) {
+            console.error(err);
+            alert("카카오 연동 확인 중 오류가 발생했습니다.");
+            pendingFormData = null;
+            return;
+        }
+
+        // 이제 진짜 신청 요청
+        try {
+            const r = await fetch("/api/public/apply", {
+                method: "POST",
+                body: pendingFormData
+            });
+
+            if (!r.ok) {
+                const t = await r.text();
+                alert("신청 실패: " + t);
+                pendingFormData = null;
+                return;
+            }
+
+            // ✅ 승인 후 확인코드 발급 안내
+            alert("신청이 접수되었습니다.\n관리자 승인 후 카카오톡으로 확인코드가 발급됩니다.");
+
+            pendingFormData = null;
+            await loadGrid();
+        } catch (err) {
+            console.error(err);
+            alert("신청 중 오류가 발생했습니다.");
+            pendingFormData = null;
+        }
+    });
 </script>
 </body>
 </html>

@@ -23,3 +23,14 @@ app:
   admin:
     username: ${APP_ADMIN_USERNAME:admin}
     password: ${APP_ADMIN_PASSWORD:}
+
+  # ✅ 만료일(ISO-8601) - 예시: 2026-06-30 23:59:59 KST
+  locker:
+    expires-at: ${LOCKER_EXPIRES_AT:2027-03-05T23:59:59+09:00}
+
+kakao:
+  # ✅ 환경변수로 넣는 걸 권장
+  rest-key: ${KAKAO_REST_KEY:}
+  client-secret: ${KAKAO_CLIENT_SECRET:}
+  redirect-uri: ${KAKAO_REDIRECT_URI:http://158.247.219.201/oauth/kakao/callback}
+  student-page-url: ${KAKAO_STUDENT_PAGE_URL:http://158.247.219.201/student.html}

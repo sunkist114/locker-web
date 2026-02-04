@@ -365,7 +365,11 @@
     </div>
 
     <div class="card">
-      <h2>신청 대기 목록</h2>
+      <!-- ✅ (추가된 부분) "전체 초기화" 버튼만 원본에 얹기 -->
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; flex-wrap:wrap;">
+        <h2 style="margin:0;">신청 대기 목록</h2>
+        <button class="btn" type="button" onclick="resetAllLockers()">전체 초기화</button>
+      </div>
 
       <table class="table">
         <thead>
@@ -795,6 +799,27 @@
       renderPending(list);
     } catch (e) {
       setMsg("대기 목록 로드 실패: " + (e?.message || e), true);
+    }
+  }
+
+  // -----------------------
+  // Reset all (전체 초기화) ✅ 추가된 기능
+  // -----------------------
+  async function resetAllLockers() {
+    if (!confirm("정말 전체 초기화할까요?\n(모든 신청/승인 상태가 초기화됩니다)")) return;
+
+    const twice = prompt("실수 방지를 위해 '초기화' 라고 입력해주세요.");
+    if (twice !== "초기화") {
+      setMsg("취소되었습니다.");
+      return;
+    }
+
+    try {
+      await api("/api/admin/reset", { method: "POST" });
+      setMsg("전체 초기화 완료");
+      await refreshAll();
+    } catch (e) {
+      setMsg("전체 초기화 실패: " + (e?.message || e), true);
     }
   }
 

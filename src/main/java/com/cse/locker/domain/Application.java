@@ -8,7 +8,7 @@ import java.time.Instant;
 public class Application {
 
     public enum Status {
-        PENDING, APPROVED
+        PENDING, APPROVED, EXPIRED
     }
 
     @Id
@@ -32,13 +32,29 @@ public class Application {
     private Status status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt; // 최초 신청 시각
+    private Instant createdAt;
 
     @Column(columnDefinition = "text")
-    private String memo; // 사물함 메모(물품 기록)
+    private String memo;
 
     @Column(name = "lookup_code_hash")
-    private String lookupCodeHash; // 조회용 코드 해시
+    private String lookupCodeHash;
+
+    // ✅ 승인/만료 알림용 필드
+    @Column(name = "approved_at")
+    private Instant approvedAt;
+
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
+    @Column(name = "expired_at")
+    private Instant expiredAt;
+
+    @Column(name = "notified_d7")
+    private boolean notifiedD7;
+
+    @Column(name = "notified_d1")
+    private boolean notifiedD1;
 
     // -----------------------------
     // Deposit transfer image (store only while PENDING)
@@ -56,14 +72,8 @@ public class Application {
     @Column(name = "transfer_image_uploaded_at")
     private Instant transferImageUploadedAt;
 
-    protected Application() {
-        // JPA 기본 생성자(필수)
-    }
+    protected Application() {}
 
-    /**
-     * ✅ (A 방식) 기존 LockerService 코드 호환용 생성자
-     * - status를 외부에서 넣을 수 있어야 함
-     */
     public Application(String studentId, String name, String phone, int lockerNumber, Status status) {
         this.studentId = studentId;
         this.name = name;
@@ -78,9 +88,7 @@ public class Application {
         if (createdAt == null) createdAt = Instant.now();
     }
 
-    // -----------------------------
     // getters
-    // -----------------------------
     public Long getId() { return id; }
     public String getStudentId() { return studentId; }
     public String getName() { return name; }
@@ -91,29 +99,29 @@ public class Application {
     public String getMemo() { return memo; }
     public String getLookupCodeHash() { return lookupCodeHash; }
 
+    public Instant getApprovedAt() { return approvedAt; }
+    public Instant getExpiresAt() { return expiresAt; }
+    public Instant getExpiredAt() { return expiredAt; }
+    public boolean isNotifiedD7() { return notifiedD7; }
+    public boolean isNotifiedD1() { return notifiedD1; }
+
     public byte[] getTransferImage() { return transferImage; }
     public String getTransferImageContentType() { return transferImageContentType; }
     public String getTransferImageFilename() { return transferImageFilename; }
     public Instant getTransferImageUploadedAt() { return transferImageUploadedAt; }
 
-    // -----------------------------
     // setters
-    // -----------------------------
-    public void setStatus(Status status) {
-        this.status = status;
-    }
+    public void setStatus(Status status) { this.status = status; }
+    public void setMemo(String memo) { this.memo = memo; }
+    public void setLookupCodeHash(String lookupCodeHash) { this.lookupCodeHash = lookupCodeHash; }
 
-    public void setMemo(String memo) {
-        this.memo = memo;
-    }
+    public void setApprovedAt(Instant approvedAt) { this.approvedAt = approvedAt; }
+    public void setExpiresAt(Instant expiresAt) { this.expiresAt = expiresAt; }
+    public void setExpiredAt(Instant expiredAt) { this.expiredAt = expiredAt; }
+    public void setNotifiedD7(boolean notifiedD7) { this.notifiedD7 = notifiedD7; }
+    public void setNotifiedD1(boolean notifiedD1) { this.notifiedD1 = notifiedD1; }
 
-    public void setLookupCodeHash(String lookupCodeHash) {
-        this.lookupCodeHash = lookupCodeHash;
-    }
-
-    // -----------------------------
     // transfer image helpers
-    // -----------------------------
     public void setTransferImage(byte[] bytes, String contentType, String filename) {
         this.transferImage = bytes;
         this.transferImageContentType = contentType;
@@ -121,10 +129,6 @@ public class Application {
         this.transferImageUploadedAt = Instant.now();
     }
 
-    /**
-     * ✅ 승인 후에는 이미지 저장하지 않기: 즉시 폐기
-     * - LockerService.approve()에서 호출
-     */
     public void clearTransferImage() {
         this.transferImage = null;
         this.transferImageContentType = null;
