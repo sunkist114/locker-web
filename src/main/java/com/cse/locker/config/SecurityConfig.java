@@ -47,23 +47,25 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
-                        // 누구나 접근 가능: 학생 페이지/로그인/정적 리소스/공개 API
                         .requestMatchers(
                                 "/", "/student.html", "/my-locker.html",
                                 "/login.html",
+                                "/oauth/kakao/**",          // ⭐ 추가: 카카오 OAuth 전체 공개
+                                "/error",                   // (권장) 에러 페이지
+                                "/favicon.ico",
                                 "/css/**", "/js/**", "/images/**",
+                                "/assets/**", "/static/**", // (권장) 정적 경로
                                 "/api/public/**"
                         ).permitAll()
 
-                        // 관리자만 접근 가능: 관리자 페이지 + 관리자 API
                         .requestMatchers(
                                 "/admin.html", "/admin-approved.html",
                                 "/api/admin/**"
                         ).hasRole("ADMIN")
 
-                        // 나머지는 로그인 필요
                         .anyRequest().authenticated()
                 )
+
 
                 .formLogin(form -> form
                         // 커스텀 로그인 페이지(정적 html)
