@@ -123,13 +123,15 @@
 
         /* ✅ 핵심: 2열 유지 + 화면 줄면 전체 비율 느낌으로 같이 줄어듦 */
         .topCard{
-            padding: clamp(10px, 2.2vw, 18px);
+            padding: clamp(12px, 2.2vw, 18px);
             display:grid;
-            grid-template-columns: clamp(120px, 32vw, 240px) 1fr;
-            gap: clamp(10px, 2vw, 16px);
+            grid-template-columns: clamp(120px, 32vw, 220px) minmax(0, 1fr);
+            gap: clamp(8px, 1.8vw, 14px);
             align-items:stretch;
             min-width:0;
+            max-width:100%;
         }
+
 
         @media (max-width:760px){
             .header{
@@ -646,6 +648,45 @@
         #emptyModalCode{
             margin-bottom: 8px;
         }
+
+        /* =========================
+   Mobile overflow fix (2열 유지)
+   ========================= */
+        @media (max-width: 520px){
+            .wrap{
+                margin: 22px auto;
+                padding: 0 14px 76px; /* 기본 좌우 여백 확보 */
+            }
+
+            .topCard{
+                padding: 12px;
+                gap: 10px;
+                grid-template-columns: clamp(112px, 34vw, 180px) minmax(0, 1fr);
+            }
+
+            .lockerBox{ padding: 10px; }
+            .lockerSvg{ width: clamp(110px, 28vw, 160px); }
+
+            .infoLines{ padding: 10px 12px; }
+
+            /* 라벨 폭 줄여서 오른쪽 밀림 방지 */
+            .label{
+                width: clamp(64px, 20vw, 96px);
+                font-size: clamp(12px, 3.1vw, 14px);
+            }
+
+            /* 값 글자도 같이 줄어들게 */
+            .value{
+                font-size: clamp(13px, 3.6vw, 17px);
+            }
+
+            /* 줄 간격도 너무 붙지 않게 "살짝"만 */
+            .line{
+                font-size: clamp(13px, 3.4vw, 16px);
+                padding: 2px 8px;
+            }
+        }
+
     </style>
 </head>
 
@@ -1310,6 +1351,7 @@
         alert("로딩 중 오류가 발생했습니다.");
         window.location.replace("/student.html");
     });
+
 </script>
 </body>
 </html>
