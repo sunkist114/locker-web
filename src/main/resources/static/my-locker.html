@@ -41,7 +41,7 @@
         .wrap{
             max-width:980px;
             margin:34px auto;
-            padding:0 16px 76px;
+            padding:0 16px 76px; /* ✅ 기본 좌우 여백 유지 */
         }
 
         .header{
@@ -121,10 +121,11 @@
             min-width:0;
         }
 
+        /* ✅ 핵심: 2열 유지 + 화면 줄면 전체 비율 느낌으로 같이 줄어듦 */
         .topCard{
-            padding: clamp(12px, 2.2vw, 18px);
+            padding: clamp(10px, 2.2vw, 18px);
             display:grid;
-            grid-template-columns: clamp(150px, 34vw, 240px) 1fr;
+            grid-template-columns: clamp(120px, 32vw, 240px) 1fr;
             gap: clamp(10px, 2vw, 16px);
             align-items:stretch;
             min-width:0;
@@ -143,10 +144,10 @@
 
         .topSide{
             height:100%;
-            min-height:190px;
             min-width:0;
         }
 
+        /* ✅ 세로 강제 높이 최소화 + 너무 작아지지 않도록만 */
         .lockerBox{
             border:1px solid var(--border);
             border-radius:18px;
@@ -161,6 +162,7 @@
             position:relative;
             overflow:hidden;
             min-width:0;
+            min-height: clamp(140px, 32vw, 190px); /* ✅ 화면에 맞춰 유동 */
         }
 
         .lockerBox:after{
@@ -178,7 +180,7 @@
         }
 
         .lockerSvg{
-            width: clamp(140px, 30vw, 190px);
+            width: clamp(110px, 28vw, 190px);
             height:auto;
             display:block;
             position:relative;
@@ -198,42 +200,49 @@
             min-width:0;
         }
 
-        /* ✅ 만료일 라인 추가로 4줄 */
+        /* ✅ 4줄 유지, 높이는 유동 */
         .linesFill{
             display:grid;
             grid-template-rows: repeat(4, 1fr);
             height:100%;
-            min-height:190px;
+            min-height: clamp(140px, 32vw, 190px);
         }
 
+        /* ✅ 오른쪽 여백 확보 + 붙는 느낌 완화 */
         .line{
             display:flex;
             align-items:center;
             gap:12px;
-            padding:0 10px;
+            padding:10px 16px 10px 10px; /* ✅ 오른쪽 기본 여백 */
             border-bottom:1px dashed rgba(230,234,242,.95);
-            font-size:16px;
             min-width:0;
         }
         .line:last-child{ border-bottom:none; }
 
+        /* ✅ 라벨도 화면 줄면 같이 작아짐 */
         .label{
-            width:110px;
+            width: clamp(78px, 22vw, 110px);
             color:var(--muted);
             font-weight:900;
-            font-size:14px;
+            font-size: clamp(12px, 3.2vw, 14px);
             letter-spacing:.01em;
             flex:0 0 auto;
         }
 
+        /* ✅ 값도 화면 줄면 같이 작아짐 + 줄바꿈/… 금지 */
         .value{
             font-weight:950;
             color:var(--text);
-            font-size:17px;
+            font-size: clamp(12px, 3.6vw, 17px);
+
             min-width:0;
-            overflow:hidden;
-            text-overflow:ellipsis;
-            white-space:nowrap;
+            white-space:nowrap;     /* 줄바꿈 금지 */
+            overflow:visible;       /* 잘림 금지 */
+            text-overflow:clip;     /* … 금지 */
+            line-height:1.35;
+
+            padding-right:10px;     /* ✅ 텍스트 끝 여백 */
+            font-variant-numeric: tabular-nums;
         }
         .value.mono{ font-variant-numeric: tabular-nums; }
 
@@ -652,7 +661,7 @@
         </div>
     </div>
 
-    <div class="card topCard">
+    <div class="card topCard" id="topCard">
         <div class="lockerBox topSide">
             <svg class="lockerSvg" viewBox="0 0 320 240" aria-label="사물함">
                 <defs>
@@ -703,8 +712,6 @@
                     <div class="label">사물함 번호</div>
                     <div class="value"><span class="mono" id="vLockerNo">-</span>번</div>
                 </div>
-
-                <!-- ✅ 만료일 (요청사항: 사물함 번호 밑에 표시) -->
                 <div class="line">
                     <div class="label">만료일</div>
                     <div class="value mono" id="vExpireDate">-</div>
@@ -755,7 +762,6 @@
         </div>
 
         <div class="modalBody">
-
             <div id="emptyStepGuide">
                 <div class="guideCard">
                     <div class="guideTop">
@@ -763,7 +769,6 @@
                         <div class="guideSub">※ 정해진 기간에 사물함 비우기를 진행해주세요.</div>
                     </div>
 
-                    <!-- ✅ (요청사항) 모달 디자인은 그대로, 절차 텍스트만 "기존"으로 원복 -->
                     <div class="refundSteps">
                         <div class="refundStep">
                             <div class="refundNum">1</div>
@@ -799,7 +804,6 @@
                 <div class="fieldLabel">비밀번호</div>
                 <input class="input" id="emptyModalCode" placeholder="비우기 확인코드 또는 재설정한 비밀번호" autocomplete="off" inputmode="numeric"/>
             </div>
-
         </div>
 
         <div class="modalFoot" id="emptyModalFoot" style="display:none;">
@@ -1036,7 +1040,6 @@
         return "-";
     }
 
-    /* ✅ 만료일 파싱 (백엔드 필드명이 다를 수 있어서 후보를 넓게 처리) */
     function pickExpireRaw(data) {
         const candidates = [
             data?.expiresAt, data?.expireAt, data?.expiryAt,
@@ -1052,11 +1055,9 @@
     function formatDateYMD(raw) {
         if (!raw) return "-";
         try {
-            // raw가 "2026-03-01" 같은 형태면 그대로 사용
             const s = String(raw).trim();
             if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
 
-            // ISO / timestamp 모두 Date로 처리
             const d = new Date(s);
             if (isNaN(d.getTime())) return s;
 
@@ -1068,6 +1069,43 @@
             return String(raw);
         }
     }
+
+    /* ===========================
+       ✅ 텍스트 “줄바꿈/… 없이”
+       ✅ 화면 줄면 더 작게 맞춤
+    ============================ */
+    function fitOneLine(elm, { minPx = 11, maxPx = 17 } = {}) {
+        if (!elm) return;
+
+        const target = elm;
+
+        target.style.fontSize = maxPx + "px";
+
+        const parent = target.parentElement;
+        if (!parent) return;
+
+        const computed = getComputedStyle(parent);
+        const padL = parseFloat(computed.paddingLeft || "0");
+        const padR = parseFloat(computed.paddingRight || "0");
+
+        const safety = 8;
+        const available = Math.max(0, parent.clientWidth - padL - padR - safety);
+
+        let cur = maxPx;
+        while (cur > minPx && target.scrollWidth > available) {
+            cur -= 1;
+            target.style.fontSize = cur + "px";
+        }
+    }
+
+    function fitAllInfoLines() {
+        const values = document.querySelectorAll(".infoLines .value, .infoLines .value span");
+        values.forEach(v => fitOneLine(v, { minPx: 10, maxPx: 17 }));
+    }
+
+    window.addEventListener("resize", () => {
+        fitAllInfoLines();
+    });
 
     async function load() {
         el("topMsg").textContent = "불러오는 중...";
@@ -1098,13 +1136,16 @@
         el("vName").textContent = data.name || "-";
         el("vLockerNo").textContent = pickLockerNumber(data);
 
-        // ✅ 만료일 표시
         const expireRaw = pickExpireRaw(data);
         el("vExpireDate").textContent = formatDateYMD(expireRaw);
 
         const parsed = parseMemo(data.memo || "");
         setItemsToUI(parsed.items);
         el("memo").value = parsed.note || "";
+
+        // ✅ 로드 후 맞춤
+        fitAllInfoLines();
+        setTimeout(fitAllInfoLines, 50);
     }
 
     async function saveAll() {
@@ -1200,9 +1241,6 @@
     el("emptyModalCancel").addEventListener("click", closeEmptyModal);
     el("emptyModalConfirm").addEventListener("click", runEmptyLocker);
 
-    // -----------------------
-    // 비밀번호 변경
-    // -----------------------
     function openPwModal() {
         el("pwModalMsg").textContent = "";
         el("pwModalStudentId").value = studentId;
@@ -1256,9 +1294,6 @@
     el("pwModalCancel").addEventListener("click", closePwModal);
     el("pwModalConfirm").addEventListener("click", runChangePw);
 
-    // -----------------------
-    // 버튼 연결
-    // -----------------------
     el("saveBtn").addEventListener("click", saveAll);
     el("addItemBtn").addEventListener("click", () => {
         const list = el("itemList");
