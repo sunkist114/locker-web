@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: lockerdb
+      POSTGRES_USER: locker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - "5433:5432"
+    volumes:
+      - locker_pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      TZ: Asia/Seoul
+      # ✅ 도커 네트워크에서는 localhost가 아니라 "db" 로 붙어야 함!
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/lockerdb
+      SPRING_DATASOURCE_USERNAME: locker
+      SPRING_DATASOURCE_PASSWORD: lockerpass
+      KAKAO_REST_KEY: ${KAKAO_REST_KEY}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      KAKAO_REDIRECT_URI: "http://localhost:8080/oauth/kakao/callback"
+      KAKAO_STUDENT_PAGE_URL: "http://localhost:8080/student.html"
+
+
+volumes:
+  locker_pgdata:

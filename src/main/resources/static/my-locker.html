@@ -54,7 +54,7 @@
 
         .headerLeft h1{
             margin:0;
-            font-size:30px;
+            font-size: clamp(24px, 6vw, 30px);
             font-weight:950;
             letter-spacing:-.02em;
         }
@@ -62,7 +62,7 @@
         .headerLeft p{
             margin:6px 0 0;
             color:var(--muted);
-            font-size:13px;
+            font-size: clamp(12px, 3.2vw, 13px);
             font-weight:700;
             line-height:1.4;
         }
@@ -149,7 +149,6 @@
             min-width:0;
         }
 
-        /* ✅ 세로 강제 높이 최소화 + 너무 작아지지 않도록만 */
         .lockerBox{
             border:1px solid var(--border);
             border-radius:18px;
@@ -202,7 +201,7 @@
             min-width:0;
         }
 
-        /* ✅ 4줄 유지, 높이는 유동 */
+        /* ✅ 만료일 라인 추가로 4줄 (원래 유지) */
         .linesFill{
             display:grid;
             grid-template-rows: repeat(4, 1fr);
@@ -210,7 +209,6 @@
             min-height: clamp(140px, 32vw, 190px);
         }
 
-        /* ✅ 오른쪽 여백 확보 + 붙는 느낌 완화 */
         .line{
             display:flex;
             align-items:center;
@@ -229,6 +227,7 @@
             font-size: clamp(12px, 3.2vw, 14px);
             letter-spacing:.01em;
             flex:0 0 auto;
+            white-space:nowrap;
         }
 
         /* ✅ 값도 화면 줄면 같이 작아짐 + 줄바꿈/… 금지 */
@@ -650,8 +649,8 @@
         }
 
         /* =========================
-   Mobile overflow fix (2열 유지)
-   ========================= */
+           Mobile overflow fix (2열 유지)
+           ========================= */
         @media (max-width: 520px){
             .wrap{
                 margin: 22px auto;
@@ -753,6 +752,7 @@
                     <div class="label">사물함 번호</div>
                     <div class="value"><span class="mono" id="vLockerNo">-</span>번</div>
                 </div>
+
                 <div class="line">
                     <div class="label">만료일</div>
                     <div class="value mono" id="vExpireDate">-</div>
@@ -1351,7 +1351,6 @@
         alert("로딩 중 오류가 발생했습니다.");
         window.location.replace("/student.html");
     });
-
 </script>
 </body>
 </html>

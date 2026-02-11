@@ -153,10 +153,16 @@ public class LockerService {
         locker.setReservedStudentId(sid);
         lockerRepo.save(locker);
 
+        // ✅ 카카오 알림(신청 접수) - 문구 개선
         try {
-            kakaoTalkService.sendToStudent(sid,
-                    "사물함 신청 접수",
-                    lockerNumber + "번 사물함 신청이 접수되었습니다.\n관리자 승인 후 확인코드가 발급됩니다.");
+            kakaoTalkService.sendToStudent(
+                    sid,
+                    "[사물함 신청 접수]\n",
+                    "사물함 신청이 접수되었습니다!\n\n"
+                            + "▪ 사물함 번호: " + lockerNumber + "번\n"
+                            + "▪ 상태: 관리자 승인 대기\n\n"
+                            + "관리자 승인 후 확인코드가 발급됩니다.\n\n"
+            );
         } catch (Exception ignore) {}
 
         return "";
@@ -199,18 +205,30 @@ public class LockerService {
             studentRepo.save(acc);
         }
 
+        // ✅ 카카오 알림(승인 완료) - 문구 개선
         try {
             if (codePlain != null) {
-                kakaoTalkService.sendToStudent(app.getStudentId(),
-                        "사물함 승인 완료",
-                        app.getLockerNumber() + "번 사물함 사용이 승인되었습니다.\n"
-                                + "확인코드: " + codePlain + "\n"
-                                + "※ 이 확인코드는 '나의 사물함 조회' 및 비밀번호 재설정에 사용됩니다.");
+                kakaoTalkService.sendToStudent(
+                        app.getStudentId(),
+                        "[사물함 승인 완료]\n",
+                        "사물함 사용이 승인되었습니다!\n\n"
+                                + "▪ 사물함 번호: " + app.getLockerNumber() + "번\n"
+                                + "▪ 확인코드: " + codePlain + "\n\n"
+                                + "확인코드는\n"
+                                + "- 나의 사물함 조회\n"
+                                + "- 비밀번호 재설정\n"
+                                + "에 사용됩니다.\n\n"
+                                + "반드시 저장해두세요."
+                );
             } else {
-                kakaoTalkService.sendToStudent(app.getStudentId(),
-                        "사물함 승인 완료",
-                        app.getLockerNumber() + "번 사물함 사용이 승인되었습니다.\n"
-                                + "※ 확인코드는 이전에 발급된 코드를 사용하세요.");
+                kakaoTalkService.sendToStudent(
+                        app.getStudentId(),
+                        "[사물함 승인 완료]\n",
+                        "사물함 사용이 승인되었습니다!\n\n"
+                                + "▪ 사물함 번호: " + app.getLockerNumber() + "번\n\n"
+                                + "확인코드는 이전에 발급된 코드를 사용하세요.\n\n"
+                                + "‘나의 사물함 조회’에서 확인 가능합니다."
+                );
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -221,10 +239,15 @@ public class LockerService {
     public void reject(long id) {
         Application app = appRepo.findById(id).orElseThrow();
 
+        // ✅ 카카오 알림(거절) - 문구 개선
         try {
-            kakaoTalkService.sendToStudent(app.getStudentId(),
-                    "사물함 신청 거절",
-                    app.getLockerNumber() + "번 신청이 거절되었습니다.");
+            kakaoTalkService.sendToStudent(
+                    app.getStudentId(),
+                    "[사물함 신청 거절]\n",
+                    "사물함 신청이 거절되었습니다.\n\n"
+                            + "▪ 사물함 번호: " + app.getLockerNumber() + "번\n\n"
+                            + "자세한 문의는 관리자에게 연락해주세요."
+            );
         } catch (Exception ignore) {}
 
         Locker locker = lockerRepo.findById(app.getLockerNumber()).orElseThrow();
@@ -444,10 +467,20 @@ public class LockerService {
         else acc.setPasswordHash(passwordEncoder.encode(code));
         studentRepo.save(acc);
 
+        // ✅ 카카오 알림(관리자 배정 승인) - 문구 개선
         try {
-            kakaoTalkService.sendToStudent(sid,
-                    "사물함 승인 완료",
-                    lockerNumber + "번 사물함 사용이 승인되었습니다.\n확인코드: " + code);
+            kakaoTalkService.sendToStudent(
+                    sid,
+                    "[사물함 승인 완료]\n",
+                    "사물함 사용이 승인되었습니다!\n\n"
+                            + "▪ 사물함 번호: " + lockerNumber + "번\n"
+                            + "▪ 확인코드: " + code + "\n\n"
+                            + "확인코드는\n"
+                            + "- 나의 사물함 조회\n"
+                            + "- 비밀번호 재설정\n"
+                            + "에 사용됩니다.\n\n"
+                            + "반드시 저장해두세요."
+            );
         } catch (Exception ignore) {}
 
         return code;
