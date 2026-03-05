@@ -2,6 +2,7 @@ package com.cse.locker.web;
 
 import com.cse.locker.domain.KakaoAccount;
 import com.cse.locker.repo.KakaoAccountRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
@@ -25,8 +26,12 @@ public class KakaoOAuthController {
     @Value("${kakao.rest-key}")
     private String restKey;
 
-    @Value("${kakao.redirect-uri}")
-    private String redirectUri;
+    /**
+     * ✅ (선택) 기존처럼 환경변수로 고정 redirect-uri를 쓰고 싶으면 여기에 넣을 수 있음.
+     * 비어있으면 현재 요청(host/scheme)을 기반으로 자동으로 redirect uri를 구성함.
+     */
+    @Value("${kakao.redirect-uri:}")
+    private String configuredRedirectUri;
 
     // ✅ (선택) Client Secret 쓴다면 application.yml에 kakao.client-secret 추가 후 env로 넣기
     @Value("${kakao.client-secret:}")
@@ -38,6 +43,7 @@ public class KakaoOAuthController {
 
     @GetMapping("/oauth/kakao/login")
     public ResponseEntity<Void> login(
+            HttpServletRequest request,
             @RequestParam String studentId,
             @RequestParam(defaultValue = "0") int withTalk
     ) {
@@ -46,6 +52,9 @@ public class KakaoOAuthController {
         String scope = (withTalk == 1)
                 ? "profile_nickname talk_message"
                 : "profile_nickname";
+
+        // ✅ 현재 요청 기반으로 redirectUri를 결정 (프록시 환경도 고려)
+        String redirectUri = resolveRedirectUri(request);
 
         String url = "https://kauth.kakao.com/oauth/authorize"
                 + "?response_type=code"
@@ -63,10 +72,14 @@ public class KakaoOAuthController {
     @GetMapping("/oauth/kakao/callback")
     @Transactional
     public ResponseEntity<String> callback(
+            HttpServletRequest request,
             @RequestParam String code,
             @RequestParam(required = false) String state
     ) {
-        // ===== DEBUG (1) callback 들어온 값 확인 =====
+        // ✅ login에서 사용한 것과 "동일한" redirectUri를 사용해야 함
+        String redirectUri = resolveRedirectUri(request);
+
+        // ===== DEBUG (callback 들어온 값 확인) =====
         System.out.println("=== KakaoOAuth callback ===");
         System.out.println("state(studentId) = " + state);
         System.out.println("code(head) = " + (code == null ? "null" : code.substring(0, Math.min(10, code.length())) + "..."));
@@ -159,6 +172,36 @@ public class KakaoOAuthController {
                 """;
 
         return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(html);
+    }
+
+    /**
+     * ✅ redirect_uri를 "현재 접속한 주소" 기반으로 생성.
+     * - 프록시(nginx) 사용 시: X-Forwarded-Proto / X-Forwarded-Host를 우선 사용
+     * - configuredRedirectUri(kakao.redirect-uri)가 설정돼 있으면 그 값을 우선 사용 (fallback 용)
+     */
+    private String resolveRedirectUri(HttpServletRequest request) {
+        // 1) 환경변수로 고정값을 넣은 경우 우선 사용 (단, 공백/빈값이면 무시)
+        if (configuredRedirectUri != null && !configuredRedirectUri.isBlank()) {
+            return configuredRedirectUri.trim();
+        }
+
+        // 2) 프록시 헤더 우선 사용
+        String xfProto = request.getHeader("X-Forwarded-Proto");
+        String xfHost = request.getHeader("X-Forwarded-Host");
+        if (xfHost != null && !xfHost.isBlank()) {
+            String scheme = (xfProto == null || xfProto.isBlank()) ? "http" : xfProto.trim();
+            return scheme + "://" + xfHost.trim() + "/oauth/kakao/callback";
+        }
+
+        // 3) 일반 직접 접속
+        String scheme = request.getScheme();      // http
+        String host = request.getServerName();    // 10.26.96.67
+        int port = request.getServerPort();       // 8080
+        boolean defaultPort = ("http".equalsIgnoreCase(scheme) && port == 80)
+                || ("https".equalsIgnoreCase(scheme) && port == 443);
+
+        String base = defaultPort ? (scheme + "://" + host) : (scheme + "://" + host + ":" + port);
+        return base + "/oauth/kakao/callback";
     }
 
     private String encode(String s) {
