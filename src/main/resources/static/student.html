@@ -455,6 +455,7 @@
 
                 selectedLocker = num;
                 document.getElementById('selectedText').textContent = '선택 사물함: ' + selectedLocker + '번';
+                trackEvent('locker_click', document.getElementById('studentId').value.trim() || null, {lockerNumber: num});
             });
 
             grid.appendChild(div);
@@ -494,6 +495,8 @@
             alert("보증금 송금(입금) 이미지를 반드시 업로드해주세요.");
             return;
         }
+
+        trackEvent('apply_start', studentId, {lockerNumber: selectedLocker});
 
         // 1) 신청 FormData는 미리 만들어두고(전송 X)
         const fd = new FormData();
@@ -562,6 +565,7 @@
         if (!/^\d+$/.test(studentId)) return showError("학번은 숫자만 입력해주세요.");
         if (!codeOrPw) return showError("확인코드(또는 비밀번호)를 입력해야 조회할 수 있어요.");
 
+        trackEvent('lookup_start', studentId, null);
         setMyStatus("조회 중...");
         modalErr.style.display = "none";
         modalErr.textContent = "";
@@ -572,6 +576,7 @@
         const raw = await r.text();
         if (!r.ok) {
             showError(raw || "학번 또는 확인코드가 올바르지 않습니다.");
+            trackEvent('lookup_fail', studentId, {status: r.status});
             setMyStatus("");
             return;
         }
@@ -584,6 +589,13 @@
         }
 
         closeModal();
+        trackEvent('lookup_success', studentId, {status: data.status, lockerNumber: data.lockerNumber ?? null});
+
+        // ✅ 조회 성공 시 studentId와 구독 연결
+        // (관리자 배정 학생이 조회 성공하면 이 시점에 연결됨)
+        if (data.status !== "NONE" && data.status !== "ERROR") {
+            subscribePush(studentId);
+        }
 
         if (data.status === "APPROVED") {
             sessionStorage.setItem("locker_auth_studentId", studentId);
@@ -636,6 +648,93 @@
     // 초기 로딩
     loadGrid();
 
+    // =========================
+    // Web Push 구독
+    // =========================
+    function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = atob(base64);
+        return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+    }
+
+    // SW 등록 및 Push 구독 객체 캐싱
+    let _swReg = null;
+    let _vapidKey = null;
+
+    async function initPush() {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        try {
+            _swReg = await navigator.serviceWorker.register('/service-worker.js');
+            const keyRes = await fetch('/api/push/vapid-public-key');
+            const { publicKey } = await keyRes.json();
+            if (!publicKey) return;
+            _vapidKey = publicKey;
+
+            // 권한 요청 (페이지 로드 시 1회)
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') return;
+
+            // studentId 없이 일단 구독 등록 (endpoint만 저장)
+            await _sendSubscription(null);
+        } catch (e) {
+            console.warn('Web Push 초기화 실패:', e);
+        }
+    }
+
+    // studentId를 연결해 서버에 구독 저장/갱신
+    async function subscribePush(studentId) {
+        if (!_swReg || !_vapidKey) return;
+        if (Notification.permission !== 'granted') return;
+        try {
+            await _sendSubscription(studentId);
+        } catch (e) {
+            console.warn('Web Push 구독 갱신 실패:', e);
+        }
+    }
+
+    async function _sendSubscription(studentId) {
+        const sub = await _swReg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(_vapidKey)
+        });
+        await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...sub.toJSON(), studentId: studentId || null })
+        });
+    }
+
+    // 페이지 로드 시 SW 등록 + 권한 요청 + 익명 구독
+    initPush();
+
+    // =========================
+    // 이벤트 로그 수집
+    // =========================
+    function trackEvent(eventName, studentId, meta) {
+        try {
+            fetch('/api/public/event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventName,
+                    pageName: 'student',
+                    studentId: studentId || null,
+                    meta: meta != null ? JSON.stringify(meta) : null
+                }),
+                keepalive: true
+            }).catch(() => {});
+        } catch (e) {}
+    }
+
+    document.getElementById('transferImage').addEventListener('change', (e) => {
+        if (e.target.files?.length > 0) {
+            trackEvent('upload_image_start', document.getElementById('studentId').value.trim() || null, null);
+        }
+    });
+
+    trackEvent('page_view_student', null, null);
+
     // ✅ 팝업(콜백)에서 연동 완료 메시지 받으면 -> 신청 전송
     window.addEventListener("message", async (e) => {
         if (!e?.data || e.data.type !== "KAKAO_LINKED") return;
@@ -669,12 +768,18 @@
             if (!r.ok) {
                 const t = await r.text();
                 alert("신청 실패: " + t);
+                trackEvent('upload_image_fail', studentId, {reason: t});
                 pendingFormData = null;
                 return;
             }
 
             // ✅ 승인 후 확인코드 발급 안내
             alert("신청이 접수되었습니다.\n관리자 승인 후 카카오톡 '나에게 메시지'로 확인코드가 발급됩니다.");
+
+            trackEvent('apply_success', studentId, {lockerNumber: selectedLocker});
+
+            // ✅ 구독에 학번 연결 (알림 타겟팅용)
+            subscribePush(studentId);
 
             pendingFormData = null;
             await loadGrid();

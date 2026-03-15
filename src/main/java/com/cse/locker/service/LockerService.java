@@ -24,6 +24,7 @@ public class LockerService {
     private final StudentAccountRepository studentRepo;
     private final PasswordEncoder passwordEncoder;
     private final KakaoTalkService kakaoTalkService;
+    private final WebPushService webPushService;
 
     @Value("${app.locker.expires-at:}")
     private String expiresAtConfig;
@@ -32,12 +33,14 @@ public class LockerService {
                          ApplicationRepository appRepo,
                          StudentAccountRepository studentRepo,
                          PasswordEncoder passwordEncoder,
-                         KakaoTalkService kakaoTalkService) {
+                         KakaoTalkService kakaoTalkService,
+                         WebPushService webPushService) {
         this.lockerRepo = lockerRepo;
         this.appRepo = appRepo;
         this.studentRepo = studentRepo;
         this.passwordEncoder = passwordEncoder;
         this.kakaoTalkService = kakaoTalkService;
+        this.webPushService = webPushService;
     }
 
     /* =========================
@@ -165,6 +168,12 @@ public class LockerService {
             );
         } catch (Exception ignore) {}
 
+        // ✅ Web Push 알림 (신청 접수)
+        try {
+            webPushService.sendToStudent(sid, "사물함 신청 접수",
+                    lockerNumber + "번 사물함 신청이 접수되었습니다. 관리자 승인 대기 중입니다.");
+        } catch (Exception ignore) {}
+
         return "";
     }
 
@@ -233,6 +242,13 @@ public class LockerService {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // ✅ Web Push 알림 (승인 완료)
+        try {
+            webPushService.sendToStudent(app.getStudentId(), "사물함 승인 완료",
+                    app.getLockerNumber() + "번 사물함 사용이 승인되었습니다."
+                            + (codePlain != null ? " 확인코드: " + codePlain : ""));
+        } catch (Exception ignore) {}
     }
 
     @Transactional
@@ -248,6 +264,12 @@ public class LockerService {
                             + "▪ 사물함 번호: " + app.getLockerNumber() + "번\n\n"
                             + "자세한 문의는 관리자에게 연락해주세요."
             );
+        } catch (Exception ignore) {}
+
+        // ✅ Web Push 알림 (거절)
+        try {
+            webPushService.sendToStudent(app.getStudentId(), "사물함 신청 거절",
+                    app.getLockerNumber() + "번 사물함 신청이 거절되었습니다.");
         } catch (Exception ignore) {}
 
         Locker locker = lockerRepo.findById(app.getLockerNumber()).orElseThrow();

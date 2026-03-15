@@ -27,15 +27,18 @@ public class ExpiryScheduler {
     private final LockerRepository lockerRepo;
     private final StudentAccountRepository studentAccountRepo;
     private final KakaoTalkService kakaoTalkService;
+    private final WebPushService webPushService;
 
     public ExpiryScheduler(ApplicationRepository appRepo,
                            LockerRepository lockerRepo,
                            StudentAccountRepository studentAccountRepo,
-                           KakaoTalkService kakaoTalkService) {
+                           KakaoTalkService kakaoTalkService,
+                           WebPushService webPushService) {
         this.appRepo = appRepo;
         this.lockerRepo = lockerRepo;
         this.studentAccountRepo = studentAccountRepo;
         this.kakaoTalkService = kakaoTalkService;
+        this.webPushService = webPushService;
     }
 
     // ✅ 테스트할 땐 아래로 잠깐 바꾸면 바로 확인 가능
@@ -99,6 +102,12 @@ public class ExpiryScheduler {
                                 a.getStudentId(), a.getLockerNumber(), e.toString());
                     }
 
+                    // ✅ Web Push 알림 (만료)
+                    try {
+                        webPushService.sendToStudent(a.getStudentId(), "사물함 만료 안내",
+                                a.getLockerNumber() + "번 사물함의 사용 기간이 만료되었습니다.");
+                    } catch (Exception ignore) {}
+
                     // 사물함 비우기 + 학생계정 삭제
                     Locker locker = lockerRepo.findById(a.getLockerNumber()).orElse(null);
                     if (locker != null && locker.getState() == Locker.State.APPROVED) {
@@ -134,6 +143,12 @@ public class ExpiryScheduler {
                                 a.getStudentId(), a.getLockerNumber(), e.toString());
                     }
 
+                    // ✅ Web Push 알림 (D-7)
+                    try {
+                        webPushService.sendToStudent(a.getStudentId(), "사물함 만료 D-7",
+                                a.getLockerNumber() + "번 사물함 사용 만료까지 7일 남았습니다.");
+                    } catch (Exception ignore) {}
+
                     a.setNotifiedD7(true);
                     changed = true;
                 }
@@ -153,6 +168,12 @@ public class ExpiryScheduler {
                         log.warn("[ExpiryScheduler] kakao send failed(D-1) studentId={}, locker={} err={}",
                                 a.getStudentId(), a.getLockerNumber(), e.toString());
                     }
+
+                    // ✅ Web Push 알림 (D-1)
+                    try {
+                        webPushService.sendToStudent(a.getStudentId(), "사물함 만료 D-1",
+                                a.getLockerNumber() + "번 사물함 사용 만료까지 1일 남았습니다.");
+                    } catch (Exception ignore) {}
 
                     a.setNotifiedD1(true);
                     changed = true;

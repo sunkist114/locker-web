@@ -48,14 +48,16 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/", "/student.html", "/my-locker.html",
+                                "/", "/student", "/student.html", "/my-locker.html",
                                 "/login.html",
                                 "/oauth/kakao/**",          // ⭐ 추가: 카카오 OAuth 전체 공개
                                 "/error",                   // (권장) 에러 페이지
                                 "/favicon.ico",
                                 "/css/**", "/js/**", "/images/**",
                                 "/assets/**", "/static/**", // (권장) 정적 경로
-                                "/api/public/**"
+                                "/api/public/**",
+                                "/service-worker.js",       // Web Push Service Worker
+                                "/api/push/**"              // Web Push subscribe/vapid-key
                         ).permitAll()
 
                         .requestMatchers(

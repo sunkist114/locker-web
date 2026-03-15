@@ -1,11 +1,12 @@
 server:
   port: ${SERVER_PORT:8080}
+  forward-headers-strategy: native
 
 spring:
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 20MB
+      max-file-size: 30MB
+      max-request-size: 30MB
 
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/lockerdb}
@@ -28,9 +29,16 @@ app:
   locker:
     expires-at: ${LOCKER_EXPIRES_AT:2027-03-05T23:59:59+09:00}
 
+# ✅ Web Push VAPID 키 (생성: ./gradlew generateVapidKeys 또는 web-push-codelab 도구 사용)
+# openssl ecparam -genkey -name prime256v1 -noout | openssl pkcs8 -topk8 -nocrypt -outform DER | base64 -w 0
+vapid:
+  public-key: ${VAPID_PUBLIC_KEY:}
+  private-key: ${VAPID_PRIVATE_KEY:}
+  subject: ${VAPID_SUBJECT:mailto:admin@example.com}
+
 kakao:
   # ✅ 환경변수로 넣는 걸 권장
   rest-key: ${KAKAO_REST_KEY:}
   client-secret: ${KAKAO_CLIENT_SECRET:}
-  redirect-uri: ${KAKAO_REDIRECT_URI:http://158.247.219.201/oauth/kakao/callback}
-  student-page-url: ${KAKAO_STUDENT_PAGE_URL:http://158.247.219.201/student.html}
+  redirect-uri: ${KAKAO_REDIRECT_URI:http://locker-cse.sch.ac.kr/oauth/kakao/callback}
+  student-page-url: ${KAKAO_STUDENT_PAGE_URL:http://locker-cse.sch.ac.kr/student.html}

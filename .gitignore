@@ -17,3 +17,11 @@ Thumbs.db
 # Secrets / config (DO NOT COMMIT)
 .env
 .aider*
+
+# SSL Certificates & Certbot secrets (DO NOT COMMIT)
+certbot/conf/accounts/
+certbot/conf/archive/
+certbot/conf/live/
+certbot/conf/renewal/
+*.pem
+*.key

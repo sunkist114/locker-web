@@ -140,6 +140,11 @@
 
   <!-- 승인된 사물함 목록 -->
   <div class="card">
+    <div style="margin-bottom:10px;">
+      <input id="searchInput" type="search" placeholder="사물함 번호, 학번, 이름, 전화번호, 상태 검색..."
+             style="width:100%;padding:9px 12px;border:1px solid #d8dbe2;border-radius:10px;font-size:14px;outline:none;"
+             oninput="applyFilter()" />
+    </div>
     <div style="overflow:auto;">
       <table>
         <thead>
@@ -164,41 +169,19 @@
 </div>
 
 <script>
+  let _allRows = [];
+
   // 승인 목록 CSV 다운로드
   function downloadCsv() {
     location.href = "/api/admin/approved/export";
   }
 
-  // 승인된 사물함 목록 조회
-  async function loadApproved() {
+  function renderRows(list) {
     const tbody = document.getElementById("approvedBody");
-    const msg = document.getElementById("msg");
-
-    msg.className = "msg";
-    msg.textContent = "";
-
-    tbody.innerHTML =
-            `<tr><td colspan="5" style="color:#6b7280;">불러오는 중...</td></tr>`;
-
-    const res = await fetch("/api/admin/approved");
-    if (!res.ok) {
-      tbody.innerHTML =
-              `<tr><td colspan="5" style="color:#dc2626;">
-          승인 목록을 불러오지 못했습니다. (권한/서버 확인)
-        </td></tr>`;
-      return;
-    }
-
-    const list = await res.json();
-
     if (!list.length) {
-      tbody.innerHTML =
-              `<tr><td colspan="5" style="color:#6b7280;">
-          승인된 신청이 없습니다.
-        </td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="color:#6b7280;">검색 결과가 없습니다.</td></tr>`;
       return;
     }
-
     tbody.innerHTML = list.map(a => `
       <tr>
         <td>${a.lockerNumber}</td>
@@ -208,6 +191,48 @@
         <td>${a.status}</td>
       </tr>
     `).join("");
+  }
+
+  function applyFilter() {
+    const q = document.getElementById("searchInput").value.trim().toLowerCase();
+    if (!q) { renderRows(_allRows); return; }
+    const filtered = _allRows.filter(a =>
+      String(a.lockerNumber).includes(q) ||
+      String(a.studentId  ?? "").toLowerCase().includes(q) ||
+      String(a.name       ?? "").toLowerCase().includes(q) ||
+      String(a.phone      ?? "").toLowerCase().includes(q) ||
+      String(a.status     ?? "").toLowerCase().includes(q)
+    );
+    renderRows(filtered);
+  }
+
+  // 승인된 사물함 목록 조회
+  async function loadApproved() {
+    const tbody = document.getElementById("approvedBody");
+    const msg = document.getElementById("msg");
+
+    msg.className = "msg";
+    msg.textContent = "";
+    document.getElementById("searchInput").value = "";
+
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#6b7280;">불러오는 중...</td></tr>`;
+
+    const res = await fetch("/api/admin/approved");
+    if (!res.ok) {
+      tbody.innerHTML = `<tr><td colspan="5" style="color:#dc2626;">승인 목록을 불러오지 못했습니다. (권한/서버 확인)</td></tr>`;
+      return;
+    }
+
+    const list = await res.json();
+
+    if (!list.length) {
+      tbody.innerHTML = `<tr><td colspan="5" style="color:#6b7280;">승인된 신청이 없습니다.</td></tr>`;
+      return;
+    }
+
+    // 사물함 번호 기준 숫자 오름차순 정렬
+    _allRows = list.slice().sort((a, b) => Number(a.lockerNumber) - Number(b.lockerNumber));
+    renderRows(_allRows);
   }
 
   // 최초 로드
