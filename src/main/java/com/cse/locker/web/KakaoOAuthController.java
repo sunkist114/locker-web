@@ -151,23 +151,58 @@ public class KakaoOAuthController {
         Long kakaoId = ((Number) me.get("id")).longValue();
         String sid = state == null ? null : state.trim();
 
-        KakaoAccount acc = kakaoRepo.findById(kakaoId).orElseGet(() -> new KakaoAccount(kakaoId));
+        // ✅ state(studentId) 검증: 비어있으면 연동 거부
+        if (sid == null || sid.isBlank()) {
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body("<html><body><script>alert('학번 정보가 없습니다. 다시 시도해주세요.'); window.close();</script></body></html>");
+        }
+
+        // ✅ studentId 형식 검증 (숫자만, 적절한 길이)
+        if (!sid.matches("^[0-9]{6,12}$")) {
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body("<html><body><script>alert('학번 형식이 올바르지 않습니다.'); window.close();</script></body></html>");
+        }
+
+        // ✅ 다른 학번에 이미 연동된 카카오 계정인지 확인
+        KakaoAccount acc = kakaoRepo.findById(kakaoId).orElse(null);
+        if (acc != null && acc.getStudentId() != null
+                && !acc.getStudentId().isBlank()
+                && !acc.getStudentId().equals(sid)) {
+            return ResponseEntity.badRequest()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body("<html><body><script>alert('이 카카오 계정은 이미 다른 학번(" + acc.getStudentId() + ")에 연동되어 있습니다.'); window.close();</script></body></html>");
+        }
+
+        if (acc == null) acc = new KakaoAccount(kakaoId);
         acc.setStudentId(sid);
         acc.setAccessToken(accessToken);
         acc.setRefreshToken(refreshToken);
         acc.setAccessTokenExpiresAt(Instant.now().plusSeconds(expiresIn == null ? 3600 : expiresIn.longValue()));
         kakaoRepo.save(acc);
 
-        // 3) 팝업 닫기 + opener notify
+        // 3) 팝업이면 닫기 + opener notify, 같은 창이면 student.html로 리다이렉트
         String html = """
                 <html><body>
                 <script>
                   try {
-                    if (window.opener) window.opener.postMessage({type:'KAKAO_LINKED'}, '*');
-                    window.close();
-                  } catch(e) {}
+                    if (window.opener) {
+                      // 팝업 모드: opener에게 메시지 전달 후 닫기
+                      window.opener.postMessage({type:'KAKAO_LINKED'}, '*');
+                      window.close();
+                    } else {
+                      // 같은 창 모드(인앱 브라우저): student.html로 리다이렉트
+                      // sessionStorage에 연동 완료 플래그 저장
+                      sessionStorage.setItem('kakao_linked_done', '1');
+                      window.location.href = '/student.html';
+                    }
+                  } catch(e) {
+                    sessionStorage.setItem('kakao_linked_done', '1');
+                    window.location.href = '/student.html';
+                  }
                 </script>
-                연동 완료. 이 창을 닫아주세요.
+                연동 완료. 자동으로 이동합니다...
                 </body></html>
                 """;
 
