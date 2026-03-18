@@ -1,5 +1,7 @@
 package com.cse.locker.web;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -11,19 +13,35 @@ import java.util.concurrent.ConcurrentHashMap;
 @RestController
 public class SseController {
 
+    private static final Logger log = LoggerFactory.getLogger(SseController.class);
+
+    /** SSE 연결 타임아웃: 30분 (무제한 대신 제한) */
+    private static final long SSE_TIMEOUT_MS = 30 * 60 * 1000L;
+
+    /** 최대 동시 SSE 연결 수 (DoS 방지) */
+    private static final int MAX_EMITTERS = 50;
+
     // 현재 연결된 SSE 클라이언트들을 보관
     private final Set<SseEmitter> emitters = ConcurrentHashMap.newKeySet();
 
     @GetMapping("/sse/admin")
     public SseEmitter subscribe() {
-        // timeout 0L = 연결 제한 없이 유지
-        SseEmitter emitter = new SseEmitter(0L);
+        // 최대 연결 수 초과 시 오래된 연결 정리
+        if (emitters.size() >= MAX_EMITTERS) {
+            log.warn("[SSE] Max emitter count reached ({}), refusing new connection", MAX_EMITTERS);
+            SseEmitter rejected = new SseEmitter(0L);
+            rejected.completeWithError(new RuntimeException("Too many SSE connections"));
+            return rejected;
+        }
+
+        SseEmitter emitter = new SseEmitter(SSE_TIMEOUT_MS);
         emitters.add(emitter);
 
         // 연결 종료/타임아웃/에러 시 목록에서 제거
-        emitter.onCompletion(() -> emitters.remove(emitter));
-        emitter.onTimeout(() -> emitters.remove(emitter));
-        emitter.onError(e -> emitters.remove(emitter));
+        Runnable cleanup = () -> emitters.remove(emitter);
+        emitter.onCompletion(cleanup);
+        emitter.onTimeout(cleanup);
+        emitter.onError(e -> cleanup.run());
 
         // 최초 연결 확인용 이벤트 전송
         try {
@@ -31,22 +49,26 @@ public class SseController {
                     .name("connected")
                     .data("ok"));
         } catch (IOException ignored) {
+            emitters.remove(emitter);
         }
 
         return emitter;
     }
 
     public void broadcast(String eventName) {
-        // 모든 연결된 클라이언트에게 이벤트 전파
+        // dead emitter 수집 후 일괄 제거 (ConcurrentModificationException 방지)
+        Set<SseEmitter> dead = ConcurrentHashMap.newKeySet();
+
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event()
                         .name(eventName)
                         .data("update"));
-            } catch (IOException e) {
-                // 전송 실패한 연결은 제거
-                emitters.remove(emitter);
+            } catch (Exception e) {
+                dead.add(emitter);
             }
         }
+
+        emitters.removeAll(dead);
     }
 }
