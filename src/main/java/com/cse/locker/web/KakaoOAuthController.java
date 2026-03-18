@@ -125,6 +125,31 @@ public class KakaoOAuthController {
         String accessToken = (String) body.get("access_token");
         String refreshToken = (String) body.get("refresh_token");
         Number expiresIn = (Number) body.get("expires_in");
+        String grantedScope = body.get("scope") == null ? "" : body.get("scope").toString();
+
+        // ✅ talk_message 스코프 미동의 시 연동 거부
+        if (!grantedScope.contains("talk_message")) {
+            String rejectHtml = """
+                    <html><body>
+                    <script>
+                      alert('카카오톡 메시지 전송 동의가 필요합니다.\\n\\n사물함 승인 알림을 받으려면 "카카오톡 메시지 전송"에 반드시 동의해주세요.\\n\\n다시 연동을 시도합니다.');
+                      try {
+                        if (window.opener) {
+                          window.opener.postMessage({type:'KAKAO_SCOPE_DENIED'}, '*');
+                          window.close();
+                        } else {
+                          sessionStorage.setItem('kakao_scope_denied', '1');
+                          window.location.href = '/student.html';
+                        }
+                      } catch(e) {
+                        window.location.href = '/student.html';
+                      }
+                    </script>
+                    카카오톡 메시지 전송 동의가 필요합니다. 다시 시도해주세요.
+                    </body></html>
+                    """;
+            return ResponseEntity.ok().contentType(MediaType.TEXT_HTML).body(rejectHtml);
+        }
 
         // 2) /v2/user/me -> kakaoId
         String meUrl = "https://kapi.kakao.com/v2/user/me";
