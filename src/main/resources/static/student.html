@@ -309,7 +309,7 @@
                     id="studentIdModalCode"
                     class="modal-input"
                     type="text"
-                    inputmode="numeric"
+                    inputmode="text"
                     placeholder="승인 후 받은 확인코드 or 변경한 비밀번호"
                     autocomplete="off"
             />
@@ -474,6 +474,23 @@
     // =========================
     // Apply (연동 먼저 -> 신청)
     // =========================
+
+    // 인앱 브라우저 감지 (카카오톡, 네이버, 인스타그램, 페이스북 등)
+    function isInAppBrowser() {
+        const ua = navigator.userAgent || '';
+        return /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\//i.test(ua);
+    }
+
+    // 이미지 파일을 Base64로 변환 (sessionStorage 저장용)
+    function fileToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
     async function apply() {
         if (!selectedLocker) {
             alert("사물함을 먼저 선택하세요.");
@@ -498,7 +515,29 @@
 
         trackEvent('apply_start', studentId, {lockerNumber: selectedLocker});
 
-        // 1) 신청 FormData는 미리 만들어두고(전송 X)
+        const oauthUrl = `/oauth/kakao/login?studentId=${encodeURIComponent(studentId)}&withTalk=1`;
+
+        // 인앱 브라우저: 팝업 대신 같은 창에서 리다이렉트
+        if (isInAppBrowser()) {
+            try {
+                const base64 = await fileToBase64(file);
+                sessionStorage.setItem("locker_pending_apply", JSON.stringify({
+                    studentId, name, phone,
+                    lockerNumber: selectedLocker,
+                    fileName: file.name,
+                    fileType: file.type,
+                    fileBase64: base64
+                }));
+                // 같은 창에서 카카오 OAuth 이동
+                window.location.href = oauthUrl;
+            } catch (err) {
+                console.error("파일 저장 실패:", err);
+                alert("파일 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
+            }
+            return;
+        }
+
+        // 일반 브라우저: 기존 팝업 방식
         const fd = new FormData();
         fd.append("data", new Blob([JSON.stringify({
             studentId,
@@ -510,13 +549,24 @@
 
         pendingFormData = fd;
 
-        // 2) 먼저 카카오 연동 팝업
-        const url = `/oauth/kakao/login?studentId=${encodeURIComponent(studentId)}&withTalk=1`;
-        const w = window.open(url, "KakaoLink", "width=520,height=720");
+        const w = window.open(oauthUrl, "KakaoLink", "width=520,height=720");
 
         if (!w) {
-            alert("팝업이 차단되었습니다. 브라우저에서 팝업 허용 후 다시 시도해주세요.");
-            pendingFormData = null;
+            // 팝업 차단 시에도 같은 창 리다이렉트 fallback
+            try {
+                const base64 = await fileToBase64(file);
+                sessionStorage.setItem("locker_pending_apply", JSON.stringify({
+                    studentId, name, phone,
+                    lockerNumber: selectedLocker,
+                    fileName: file.name,
+                    fileType: file.type,
+                    fileBase64: base64
+                }));
+                window.location.href = oauthUrl;
+            } catch (err) {
+                alert("팝업이 차단되었습니다. 브라우저에서 팝업 허용 후 다시 시도해주세요.");
+                pendingFormData = null;
+            }
             return;
         }
     }
@@ -734,6 +784,69 @@
     });
 
     trackEvent('page_view_student', null, null);
+
+    // ✅ 인앱 브라우저: 같은 창 리다이렉트 후 자동 신청 처리
+    (async function handleRedirectReturn() {
+        const done = sessionStorage.getItem('kakao_linked_done');
+        const raw = sessionStorage.getItem('locker_pending_apply');
+        if (!done || !raw) return;
+
+        // 플래그 즉시 제거 (중복 실행 방지)
+        sessionStorage.removeItem('kakao_linked_done');
+        sessionStorage.removeItem('locker_pending_apply');
+
+        let pending;
+        try { pending = JSON.parse(raw); } catch (e) { return; }
+
+        const { studentId, name, phone, lockerNumber, fileName, fileType, fileBase64 } = pending;
+
+        // 카카오 연동 확인
+        try {
+            const chk = await fetch(`/api/public/kakao-linked?studentId=${encodeURIComponent(studentId)}`);
+            const chkJson = await chk.json();
+            if (!chkJson.linked) {
+                alert("카카오 연동이 확인되지 않았습니다. 다시 시도해주세요.");
+                return;
+            }
+        } catch (err) {
+            console.error(err);
+            alert("카카오 연동 확인 중 오류가 발생했습니다.");
+            return;
+        }
+
+        // Base64 → File 변환
+        try {
+            const res = await fetch(fileBase64);
+            const blob = await res.blob();
+            const file = new File([blob], fileName, { type: fileType });
+
+            const fd = new FormData();
+            fd.append("data", new Blob([JSON.stringify({
+                studentId, name, phone, lockerNumber
+            })], { type: "application/json" }));
+            fd.append("transferImage", file);
+
+            const r = await fetch("/api/public/apply", {
+                method: "POST",
+                body: fd
+            });
+
+            if (!r.ok) {
+                const t = await r.text();
+                alert("신청 실패: " + t);
+                trackEvent('upload_image_fail', studentId, {reason: t});
+                return;
+            }
+
+            alert("신청이 접수되었습니다.\n관리자 승인 후 카카오톡 '나에게 메시지'로 확인코드가 발급됩니다.");
+            trackEvent('apply_success', studentId, {lockerNumber});
+            subscribePush(studentId);
+            await loadGrid();
+        } catch (err) {
+            console.error(err);
+            alert("신청 중 오류가 발생했습니다.");
+        }
+    })();
 
     // ✅ 팝업(콜백)에서 연동 완료 메시지 받으면 -> 신청 전송
     window.addEventListener("message", async (e) => {
