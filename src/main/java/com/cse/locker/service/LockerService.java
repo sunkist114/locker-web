@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -25,6 +26,8 @@ public class LockerService {
     private final PasswordEncoder passwordEncoder;
     private final KakaoTalkService kakaoTalkService;
     private final WebPushService webPushService;
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     @Value("${app.locker.expires-at:}")
     private String expiresAtConfig;
@@ -91,10 +94,21 @@ public class LockerService {
     private StudentAccount auth(String studentId, String password) {
         StudentAccount acc = studentRepo.findById(studentId)
                 .orElseThrow(() -> new IllegalStateException("계정이 존재하지 않습니다."));
-        if (!passwordEncoder.matches(password, acc.getPasswordHash())) {
-            throw new IllegalStateException("비밀번호가 올바르지 않습니다.");
+
+        // 1) StudentAccount 비밀번호 확인
+        if (passwordEncoder.matches(password, acc.getPasswordHash())) {
+            return acc;
         }
-        return acc;
+
+        // 2) fallback: lookupCodeHash로도 인증 허용 (기존 비번 변경 사용자 호환)
+        Application app = appRepo.findTopByStudentIdOrderByIdDesc(studentId).orElse(null);
+        if (app != null && app.getLookupCodeHash() != null
+                && !app.getLookupCodeHash().isBlank()
+                && passwordEncoder.matches(password, app.getLookupCodeHash())) {
+            return acc;
+        }
+
+        throw new IllegalStateException("비밀번호가 올바르지 않습니다.");
     }
 
     /* =========================
@@ -144,7 +158,9 @@ public class LockerService {
             throw new IllegalStateException("카카오 연동이 필요합니다. 먼저 카카오 연동을 완료한 뒤 다시 신청해주세요.");
         }
 
-        Locker locker = lockerRepo.findById(lockerNumber).orElseThrow();
+        // 비관적 락으로 동시 예약 방지 (SELECT ... FOR UPDATE)
+        Locker locker = lockerRepo.findByIdForUpdate(lockerNumber)
+                .orElseThrow(() -> new IllegalStateException("존재하지 않는 사물함입니다."));
         if (locker.getState() != Locker.State.AVAILABLE)
             throw new IllegalStateException("이미 사용중인 사물함입니다.");
 
@@ -193,7 +209,7 @@ public class LockerService {
 
         String codePlain = null;
         if (app.getLookupCodeHash() == null || app.getLookupCodeHash().isBlank()) {
-            codePlain = String.valueOf((int)(Math.random()*900000)+100000);
+            codePlain = String.valueOf(100000 + SECURE_RANDOM.nextInt(900000));
             app.setLookupCodeHash(passwordEncoder.encode(codePlain));
         }
 
@@ -284,6 +300,7 @@ public class LockerService {
        Student Account APIs
        ========================= */
 
+    @Transactional(readOnly = true)
     public StudentLoginDto studentLogin(String studentId, String password) {
         auth(studentId, password);
 
@@ -299,37 +316,48 @@ public class LockerService {
         );
     }
 
+    @Transactional
     public void changeStudentPassword(String studentId, String current, String next) {
         if (studentId == null || studentId.isBlank()) throw new IllegalArgumentException("studentId required");
         if (current == null) current = "";
         if (next == null || next.isBlank()) throw new IllegalArgumentException("새 비밀번호를 입력하세요.");
 
         String sid = studentId.trim();
+        String encodedNext = passwordEncoder.encode(next);
 
         StudentAccount acc = studentRepo.findById(sid).orElse(null);
-        if (acc != null && passwordEncoder.matches(current, acc.getPasswordHash())) {
-            acc.setPasswordHash(passwordEncoder.encode(next));
-            studentRepo.save(acc);
-            return;
-        }
-
         Application app = appRepo.findTopByStudentIdOrderByIdDesc(sid).orElse(null);
-        if (app == null || app.getLookupCodeHash() == null || app.getLookupCodeHash().isBlank()) {
+
+        // 현재 비밀번호 검증: StudentAccount 또는 lookupCodeHash 중 하나라도 일치하면 OK
+        boolean verified = false;
+        if (acc != null && passwordEncoder.matches(current, acc.getPasswordHash())) {
+            verified = true;
+        } else if (app != null && app.getLookupCodeHash() != null
+                && !app.getLookupCodeHash().isBlank()
+                && passwordEncoder.matches(current, app.getLookupCodeHash())) {
+            verified = true;
+        }
+
+        if (!verified) {
             throw new IllegalStateException("비밀번호가 올바르지 않습니다.");
         }
 
-        if (!passwordEncoder.matches(current, app.getLookupCodeHash())) {
-            throw new IllegalStateException("비밀번호가 올바르지 않습니다.");
-        }
-
+        // StudentAccount 업데이트
         if (acc == null) {
-            acc = new StudentAccount(sid, passwordEncoder.encode(next));
+            acc = new StudentAccount(sid, encodedNext);
         } else {
-            acc.setPasswordHash(passwordEncoder.encode(next));
+            acc.setPasswordHash(encodedNext);
         }
         studentRepo.save(acc);
+
+        // Application.lookupCodeHash도 동기화
+        if (app != null) {
+            app.setLookupCodeHash(encodedNext);
+            appRepo.save(app);
+        }
     }
 
+    @Transactional(readOnly = true)
     public MyLockerDto getMyLockerByAccount(String studentId, String password) {
         auth(studentId, password);
 
@@ -349,6 +377,7 @@ public class LockerService {
         );
     }
 
+    @Transactional(readOnly = true)
     public MyLockerDto getMyLocker(String studentId, String code) {
         Application app = appRepo.findTopByStudentIdOrderByIdDesc(studentId).orElseThrow();
         if (!passwordEncoder.matches(code, app.getLookupCodeHash()))
@@ -366,6 +395,7 @@ public class LockerService {
         );
     }
 
+    @Transactional
     public void saveMyMemo(String studentId, String code, String memo) {
         Application app = appRepo.findTopByStudentIdOrderByIdDesc(studentId).orElseThrow();
         if (!passwordEncoder.matches(code, app.getLookupCodeHash()))
@@ -374,6 +404,7 @@ public class LockerService {
         appRepo.save(app);
     }
 
+    @Transactional
     public void saveMyMemoByAccount(String studentId, String password, String memo) {
         auth(studentId,password);
         Application app = appRepo.findTopByStudentIdOrderByIdDesc(studentId).orElseThrow();
@@ -381,6 +412,7 @@ public class LockerService {
         appRepo.save(app);
     }
 
+    @Transactional
     public void emptyMyLocker(String studentId, String code) {
         Application app = appRepo.findTopByStudentIdOrderByIdDesc(studentId).orElseThrow();
         if (!passwordEncoder.matches(code, app.getLookupCodeHash()))
@@ -395,6 +427,7 @@ public class LockerService {
         studentRepo.deleteById(studentId);
     }
 
+    @Transactional
     public void emptyMyLockerByAccount(String studentId, String password) {
         auth(studentId,password);
         Application app = appRepo.findTopByStudentIdOrderByIdDesc(studentId).orElseThrow();
@@ -436,6 +469,7 @@ public class LockerService {
         });
     }
 
+    @Transactional(readOnly = true)
     public List<PendingDto> getPendingList() {
         List<Application> list = appRepo.findByStatus(Application.Status.PENDING);
         List<PendingDto> out = new ArrayList<>();
@@ -445,6 +479,7 @@ public class LockerService {
         return out;
     }
 
+    @Transactional(readOnly = true)
     public TransferImageDto getTransferImage(long id) {
         Application a = appRepo.findById(id).orElseThrow();
         return new TransferImageDto(
@@ -454,6 +489,7 @@ public class LockerService {
         );
     }
 
+    @Transactional
     public String adminAssignApproved(String studentId, String name, String phone, int lockerNumber) {
         String sid = (studentId == null) ? "" : studentId.trim();
         if (sid.isBlank()) throw new IllegalStateException("학번이 올바르지 않습니다.");
@@ -466,7 +502,9 @@ public class LockerService {
             throw new IllegalStateException("이미 다른 사물함을 신청/사용 중인 학번입니다.");
         }
 
-        Locker locker = lockerRepo.findById(lockerNumber).orElseThrow();
+        // 비관적 락으로 동시 배정 방지
+        Locker locker = lockerRepo.findByIdForUpdate(lockerNumber)
+                .orElseThrow(() -> new IllegalStateException("존재하지 않는 사물함입니다."));
         if (locker.getState()!=Locker.State.AVAILABLE)
             throw new IllegalStateException("이미 사용중");
 
@@ -476,7 +514,7 @@ public class LockerService {
         app.setApprovedAt(now);
         app.setExpiresAt(resolveExpiresAtOrDefault(now));
 
-        String code = String.valueOf((int)(Math.random()*900000)+100000);
+        String code = String.valueOf(100000 + SECURE_RANDOM.nextInt(900000));
         app.setLookupCodeHash(passwordEncoder.encode(code));
         appRepo.save(app);
 
@@ -517,9 +555,19 @@ public class LockerService {
             return new MyStatusDto(studentId, "NONE", null, "신청 내역이 없습니다.");
         }
 
-        if (app.getLookupCodeHash() == null || app.getLookupCodeHash().isBlank()
-                || !passwordEncoder.matches(code, app.getLookupCodeHash())) {
-            return new MyStatusDto(studentId, "ERROR", null, "확인코드가 올바르지 않습니다.");
+        // 1) lookupCodeHash(확인코드)로 먼저 검증
+        boolean codeMatch = app.getLookupCodeHash() != null
+                && !app.getLookupCodeHash().isBlank()
+                && passwordEncoder.matches(code, app.getLookupCodeHash());
+
+        // 2) 불일치 시 StudentAccount 비밀번호로 fallback (기존 비번 변경 사용자 호환)
+        if (!codeMatch) {
+            StudentAccount acc = studentRepo.findById(studentId).orElse(null);
+            boolean pwMatch = acc != null && passwordEncoder.matches(code, acc.getPasswordHash());
+
+            if (!pwMatch) {
+                return new MyStatusDto(studentId, "ERROR", null, "확인코드가 올바르지 않습니다.");
+            }
         }
 
         String st = app.getStatus().name();
