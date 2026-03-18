@@ -79,6 +79,14 @@ public class LockerService {
             String message
     ) {}
 
+    public record ApproveResultDto(
+            String studentId,
+            int lockerNumber,
+            String lookupCode,
+            boolean kakaoSent,
+            String kakaoError
+    ) {}
+
     /* =========================
        Utils
        ========================= */
@@ -198,7 +206,7 @@ public class LockerService {
        ========================= */
 
     @Transactional
-    public void approve(long id) {
+    public ApproveResultDto approve(long id) {
         Application app = appRepo.findById(id).orElseThrow();
 
         app.setStatus(Application.Status.APPROVED);
@@ -230,7 +238,9 @@ public class LockerService {
             studentRepo.save(acc);
         }
 
-        // ✅ 카카오 알림(승인 완료) - 문구 개선
+        // ✅ 카카오 알림(승인 완료)
+        boolean kakaoSent = false;
+        String kakaoError = null;
         try {
             if (codePlain != null) {
                 kakaoTalkService.sendToStudent(
@@ -252,10 +262,12 @@ public class LockerService {
                         "사물함 사용이 승인되었습니다!\n\n"
                                 + "▪ 사물함 번호: " + app.getLockerNumber() + "번\n\n"
                                 + "확인코드는 이전에 발급된 코드를 사용하세요.\n\n"
-                                + "‘나의 사물함 조회’에서 확인 가능합니다."
+                                + "’나의 사물함 조회’에서 확인 가능합니다."
                 );
             }
+            kakaoSent = true;
         } catch (Exception e) {
+            kakaoError = e.getMessage();
             e.printStackTrace();
         }
 
@@ -265,6 +277,14 @@ public class LockerService {
                     app.getLockerNumber() + "번 사물함 사용이 승인되었습니다."
                             + (codePlain != null ? " 확인코드: " + codePlain : ""));
         } catch (Exception ignore) {}
+
+        return new ApproveResultDto(
+                app.getStudentId(),
+                app.getLockerNumber(),
+                codePlain,
+                kakaoSent,
+                kakaoError
+        );
     }
 
     @Transactional

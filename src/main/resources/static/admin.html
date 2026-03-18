@@ -456,6 +456,18 @@
   </div>
 </div>
 
+<!-- ✅ 승인 결과 모달 (확인코드 + 카카오 전송 상태) -->
+<div id="approveResultBackdrop" class="modal-backdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal-title">✅ 승인 완료</div>
+    <div class="modal-body" id="approveResultBody" style="line-height:1.7;"></div>
+    <div class="modal-actions">
+      <button class="btn" id="approveResultCopyBtn" style="background:#2563eb; color:#fff; border-color:#2563eb;">확인코드 복사</button>
+      <button class="btn" id="approveResultCloseBtn">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- ✅ 송금 이미지 뷰어 -->
 <div id="transferImgBackdrop" class="img-viewer-backdrop" aria-hidden="true">
   <div class="img-viewer" role="dialog" aria-modal="true" aria-label="송금 이미지">
@@ -550,6 +562,62 @@
     img.removeAttribute("src");
   }
 
+  // -----------------------
+  // 승인 결과 모달
+  // -----------------------
+  let _lastApproveCode = "";
+
+  function showApproveResult(result) {
+    const body = document.getElementById("approveResultBody");
+    const kakaoStatus = result.kakaoSent
+            ? '<span style="color:#16a34a; font-weight:900;">✅ 카카오톡 전송 성공</span>'
+            : '<span style="color:#ef4444; font-weight:900;">❌ 카카오톡 전송 실패</span>'
+              + (result.kakaoError ? '<br><span style="font-size:11px; color:#6b7280;">사유: ' + escapeHtml(result.kakaoError) + '</span>' : '');
+
+    const codeDisplay = result.lookupCode
+            ? '<span style="font-size:22px; font-weight:900; color:#111; letter-spacing:3px; background:#f1f5f9; padding:6px 14px; border-radius:10px; display:inline-block; margin:4px 0;">' + escapeHtml(result.lookupCode) + '</span>'
+            : '<span style="color:#6b7280;">(이전 발급 코드 유지)</span>';
+
+    body.innerHTML =
+            '학번: <b>' + escapeHtml(result.studentId) + '</b><br>' +
+            '사물함: <b>' + result.lockerNumber + '번</b><br><br>' +
+            '확인코드: ' + codeDisplay + '<br><br>' +
+            '카카오 알림: ' + kakaoStatus +
+            (result.kakaoSent ? '' : '<br><br><span style="color:#ef4444; font-size:12px;">⚠ 학생에게 확인코드를 직접 전달해주세요.</span>');
+
+    _lastApproveCode = result.lookupCode || "";
+
+    const copyBtn = document.getElementById("approveResultCopyBtn");
+    copyBtn.style.display = _lastApproveCode ? "" : "none";
+
+    const el = document.getElementById("approveResultBackdrop");
+    el.classList.add("show");
+    el.setAttribute("aria-hidden", "false");
+  }
+
+  function closeApproveResult() {
+    const el = document.getElementById("approveResultBackdrop");
+    el.classList.remove("show");
+    el.setAttribute("aria-hidden", "true");
+  }
+
+  document.getElementById("approveResultCloseBtn").addEventListener("click", closeApproveResult);
+  document.getElementById("approveResultBackdrop").addEventListener("click", (e) => {
+    if (e.target.id === "approveResultBackdrop") closeApproveResult();
+  });
+
+  document.getElementById("approveResultCopyBtn").addEventListener("click", () => {
+    if (_lastApproveCode) {
+      navigator.clipboard.writeText(_lastApproveCode).then(() => {
+        const btn = document.getElementById("approveResultCopyBtn");
+        btn.textContent = "복사됨!";
+        setTimeout(() => { btn.textContent = "확인코드 복사"; }, 1500);
+      }).catch(() => {
+        prompt("확인코드를 복사하세요:", _lastApproveCode);
+      });
+    }
+  });
+
   document.getElementById("transferImgClose").addEventListener("click", closeTransferImage);
   document.getElementById("transferImgBackdrop").addEventListener("click", (e) => {
     if (e.target.id === "transferImgBackdrop") closeTransferImage();
@@ -560,6 +628,7 @@
       closeTransferImage();
       closeAssignConfirm();
       closeAssignForm();
+      closeApproveResult();
     }
   });
 
@@ -785,9 +854,13 @@
         const id = btn.getAttribute("data-id");
         if (!confirm("이 신청을 승인할까요?")) return;
         try {
-          await api(`/api/admin/approve/${id}`, { method: "POST" });
+          const result = await api(`/api/admin/approve/${id}`, { method: "POST" });
           setMsg("승인 완료");
           await refreshAll();
+          // ✅ 승인 결과 모달 표시 (확인코드 + 카카오 전송 상태)
+          if (result && typeof result === 'object') {
+            showApproveResult(result);
+          }
         } catch (e) {
           setMsg("승인 실패: " + (e?.message || e), true);
         }

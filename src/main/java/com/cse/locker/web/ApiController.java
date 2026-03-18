@@ -134,9 +134,9 @@ public class ApiController {
 
     @PostMapping("/api/admin/approve/{applicationId}")
     public ResponseEntity<?> approve(@PathVariable long applicationId) {
-        service.approve(applicationId);
+        LockerService.ApproveResultDto result = service.approve(applicationId);
         sse.broadcast("changed");
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/api/admin/reject/{applicationId}")
